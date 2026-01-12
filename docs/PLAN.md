@@ -307,39 +307,41 @@ Branch: `feat/mobile-foundation`
 
 ---
 
-### Stream A: Backend (API) 🔌
+### Stream A: Backend (API) 🔌 ✅ DONE
 
-#### A1: Fundament API
-- [ ] Fastify setup z TypeScript
-- [ ] tRPC integration z Fastify
-- [ ] Drizzle ORM + PostgreSQL connection
-- [ ] Health endpoint działa
-- [ ] Deploy na Railway (staging)
+#### A1: Fundament API ✅
+- [x] Fastify setup z TypeScript
+- [x] tRPC integration z Fastify
+- [x] Drizzle ORM + PostgreSQL connection
+- [x] Health endpoint działa
+- [x] Dockerfile + db scripts gotowe
+- [ ] Deploy na Railway (staging) - MANUAL
 
-#### A2: Auth
-- [ ] Better Auth setup
-- [ ] Email/password registration
-- [ ] Email/password login
-- [ ] Google OAuth
-- [ ] JWT + refresh tokens
-- [ ] Protected procedures w tRPC
+#### A2: Auth ✅
+- [x] Better Auth setup
+- [x] Email/password registration
+- [x] Email/password login
+- [x] Google OAuth config
+- [x] Protected procedures w tRPC
 
-#### A3: Core Procedures
-- [ ] clients.list / create / update / delete
-- [ ] quotes.list / byId / create / update / delete
-- [ ] templates.services.list / upsert
-- [ ] templates.materials.list / upsert
-- [ ] subscription.status
+#### A3: Core Procedures ✅
+- [x] clients.list / create / update / delete
+- [x] quotes.list / byId / create / delete (z m² calculations)
+- [x] templates.services.list / upsert / delete
+- [x] templates.materials.list / upsert / delete
+- [x] subscriptions.status / incrementQuoteCount
 
-#### A4: PDF Generation
-- [ ] Endpoint quotes.generatePdf
-- [ ] PDF template z disclaimer
-- [ ] Upload do S3/R2 (opcjonalnie)
+#### A4: PDF Generation 🚧 IN PROGRESS
+- [x] @react-pdf/renderer setup + styles
+- [ ] QuotePdfTemplate component
+- [ ] PDF generation service
+- [ ] quotes.generatePdf procedure
 
-#### A5: Subscription Logic
+#### A5: Subscription Logic 📝 PLANNED
 - [ ] RevenueCat webhook endpoint
-- [ ] Tier checking middleware
-- [ ] Quotes limit enforcement (free tier)
+- [ ] paidProcedure middleware
+- [ ] Quotes limit enforcement
+- [ ] Monthly quota reset job
 
 ---
 
