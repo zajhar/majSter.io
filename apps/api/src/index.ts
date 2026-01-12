@@ -1,5 +1,7 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
+import { appRouter, createContext } from './trpc'
 
 const fastify = Fastify({
   logger: true,
@@ -9,6 +11,16 @@ await fastify.register(cors, {
   origin: true,
 })
 
+// tRPC
+await fastify.register(fastifyTRPCPlugin, {
+  prefix: '/trpc',
+  trpcOptions: {
+    router: appRouter,
+    createContext,
+  },
+})
+
+// Legacy health endpoint (keep for Railway health checks)
 fastify.get('/health', async () => {
   return { status: 'ok', timestamp: new Date().toISOString() }
 })

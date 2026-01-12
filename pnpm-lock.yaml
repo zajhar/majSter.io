@@ -32,6 +32,9 @@ importers:
       '@majsterio/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@trpc/server':
+        specifier: ^11.0.0
+        version: 11.8.1(typescript@5.9.2)
       drizzle-orm:
         specifier: ^0.38.0
         version: 0.38.4(@types/react@19.2.2)(postgres@3.4.8)(react@19.2.0)
@@ -555,6 +558,11 @@ packages:
 
   '@pinojs/redact@0.4.0':
     resolution: {integrity: sha512-k2ENnmBugE/rzQfEcdWHcCY+/FM3VLzH9cYEsbdsoqrvzAKRhUZeRNhAZvB8OitQJ1TBed3yqWtdjzS6wJKBwg==}
+
+  '@trpc/server@11.8.1':
+    resolution: {integrity: sha512-P4rzZRpEL7zDFgjxK65IdyH0e41FMFfTkQkuq0BA5tKcr7E6v9/v38DEklCpoDN6sPiB1Sigy/PUEzHENhswDA==}
+    peerDependencies:
+      typescript: '>=5.7.2'
 
   '@types/node@22.15.3':
     resolution: {integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==}
@@ -1206,6 +1214,10 @@ snapshots:
   '@petamoriken/float16@3.9.3': {}
 
   '@pinojs/redact@0.4.0': {}
+
+  '@trpc/server@11.8.1(typescript@5.9.2)':
+    dependencies:
+      typescript: 5.9.2
 
   '@types/node@22.15.3':
     dependencies:
