@@ -6,14 +6,20 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as SplashScreen from 'expo-splash-screen'
 import { trpc } from '../lib/trpc'
 import { queryClient, trpcClient } from '../lib/api'
+import { OfflineIndicator } from '../components/ui/OfflineIndicator'
+import { initNetworkListener, useSyncStore } from '../stores/syncStore'
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
   useEffect(() => {
-    // Hide splash screen after app is ready
+    const unsubscribe = initNetworkListener()
+    useSyncStore.getState().updatePendingCount()
+
     SplashScreen.hideAsync()
+
+    return () => unsubscribe()
   }, [])
 
   return (
@@ -32,6 +38,7 @@ export default function RootLayout() {
             />
           </Stack>
           <StatusBar style="auto" />
+          <OfflineIndicator />
         </GestureHandlerRootView>
       </QueryClientProvider>
     </trpc.Provider>
