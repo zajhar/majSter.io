@@ -1,5 +1,6 @@
 import { router, publicProcedure, protectedProcedure } from './trpc'
 import { clientsRouter } from './procedures/clients'
+import { quotesRouter } from './procedures/quotes'
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
@@ -11,6 +12,7 @@ export const appRouter = router({
   }),
 
   clients: clientsRouter,
+  quotes: quotesRouter,
 })
 
 export type AppRouter = typeof appRouter
