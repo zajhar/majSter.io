@@ -1,4 +1,5 @@
 import { initTRPC } from '@trpc/server'
+import { z } from 'zod'
 
 // Stub types for mobile app compilation
 interface Quote {
@@ -18,6 +19,24 @@ interface Client {
   notes: string | null
 }
 
+// Input schemas
+const createClientInput = z.object({
+  firstName: z.string(),
+  lastName: z.string(),
+  phone: z.string().optional(),
+  siteAddress: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+const createQuoteInput = z.object({
+  clientId: z.string().optional(),
+  items: z.array(z.object({
+    description: z.string(),
+    quantity: z.number(),
+    unitPrice: z.number(),
+  })).optional(),
+})
+
 // Stub tRPC router - will be replaced when API is implemented
 const t = initTRPC.create()
 
@@ -31,13 +50,13 @@ const appRouter = t.router({
   }),
   quotes: t.router({
     list: t.procedure.query((): Quote[] => []),
-    create: t.procedure.mutation(() => ({} as Quote)),
-    get: t.procedure.query((): Quote | null => null),
+    create: t.procedure.input(createQuoteInput).mutation(() => ({} as Quote)),
+    get: t.procedure.input(z.object({ id: z.string() })).query((): Quote | null => null),
   }),
   clients: t.router({
     list: t.procedure.query((): Client[] => []),
-    create: t.procedure.mutation(() => ({} as Client)),
-    get: t.procedure.query((): Client | null => null),
+    create: t.procedure.input(createClientInput).mutation(() => ({} as Client)),
+    get: t.procedure.input(z.object({ id: z.string() })).query((): Client | null => null),
   }),
 })
 
