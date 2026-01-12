@@ -1,8 +1,9 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify'
-import { appRouter, createContext } from './trpc'
-import { auth } from './lib/auth'
+import { appRouter, createContext } from './trpc/index.js'
+import { auth } from './lib/auth.js'
+import { registerWebhooks } from './routes/webhooks.js'
 
 const fastify = Fastify({
   logger: true,
@@ -30,6 +31,9 @@ fastify.all('/api/auth/*', async (req, reply) => {
 
   return reply.send()
 })
+
+// Webhooks
+await registerWebhooks(fastify)
 
 // tRPC
 await fastify.register(fastifyTRPCPlugin, {
