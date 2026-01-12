@@ -67,8 +67,9 @@ export default function MaterialTemplatesScreen() {
     })
   }
 
-  const userTemplates = templates?.filter((t) => !t.isSystem) ?? []
-  const systemTemplates = templates?.filter((t) => t.isSystem) ?? []
+  type Template = NonNullable<typeof templates>[number]
+  const userTemplates = templates?.filter((t: Template) => !t.isSystem) ?? []
+  const systemTemplates = templates?.filter((t: Template) => t.isSystem) ?? []
 
   return (
     <View style={styles.container}>

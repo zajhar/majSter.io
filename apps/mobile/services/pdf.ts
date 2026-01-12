@@ -1,6 +1,6 @@
 import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
-import * as FileSystem from 'expo-file-system'
+import { Paths, File } from 'expo-file-system'
 
 interface QuoteForPdf {
   number: number
@@ -150,12 +150,13 @@ export async function shareQuotePdf(pdfUri: string, quoteNumber: number): Promis
     throw new Error('Udostępnianie nie jest dostępne na tym urządzeniu')
   }
 
-  // Copy to a proper filename
+  // Copy to a proper filename using new expo-file-system API
   const filename = `wycena-${quoteNumber}.pdf`
-  const newUri = `${FileSystem.cacheDirectory}${filename}`
-  await FileSystem.copyAsync({ from: pdfUri, to: newUri })
+  const sourceFile = new File(pdfUri)
+  const destFile = new File(Paths.cache, filename)
+  await sourceFile.copy(destFile)
 
-  await Sharing.shareAsync(newUri, {
+  await Sharing.shareAsync(destFile.uri, {
     mimeType: 'application/pdf',
     dialogTitle: `Wycena #${quoteNumber}`,
   })

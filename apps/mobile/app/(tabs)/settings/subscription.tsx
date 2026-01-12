@@ -91,7 +91,7 @@ export default function SubscriptionScreen() {
             <Text style={styles.usageLabel}>dni historii</Text>
           </View>
         </View>
-        {currentTier === 'free' && subscription?.quotesThisMonth >= 8 && (
+        {currentTier === 'free' && (subscription?.quotesThisMonth ?? 0) >= 8 && (
           <View style={styles.warningBanner}>
             <Ionicons name="warning" size={20} color="#92400e" />
             <Text style={styles.warningText}>

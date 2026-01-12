@@ -48,9 +48,9 @@ export default function QuoteDetailScreen() {
           lastName: client.lastName,
           siteAddress: client.siteAddress,
         },
-        groups: quote.groups?.map((g) => ({
+        groups: quote.groups?.map((g: typeof quote.groups[number]) => ({
           name: g.name,
-          services: g.services?.map((s) => ({
+          services: g.services?.map((s: typeof g.services[number]) => ({
             name: s.name,
             quantity: Number(s.quantity),
             unit: s.unit,
@@ -58,7 +58,7 @@ export default function QuoteDetailScreen() {
             total: Number(s.total),
           })) ?? [],
         })) ?? [],
-        materials: quote.materials?.map((m) => ({
+        materials: quote.materials?.map((m: typeof quote.materials[number]) => ({
           name: m.name,
           quantity: Number(m.quantity),
           unit: m.unit,
@@ -70,7 +70,7 @@ export default function QuoteDetailScreen() {
         disclaimer: quote.disclaimer,
         showDisclaimer: quote.showDisclaimer,
         total: Number(quote.total),
-        createdAt: quote.createdAt,
+        createdAt: new Date(quote.createdAt),
       })
 
       await shareQuotePdf(pdfUri, quote.number)
@@ -106,13 +106,13 @@ export default function QuoteDetailScreen() {
       )}
 
       {/* Groups */}
-      {quote.groups?.map((group) => (
+      {quote.groups?.map((group: typeof quote.groups[number]) => (
         <View key={group.id} style={styles.groupCard}>
           <Text style={styles.groupName}>{group.name}</Text>
           {group.floorM2 && (
             <Text style={styles.groupM2}>{group.floorM2} m²</Text>
           )}
-          {group.services?.map((service) => (
+          {group.services?.map((service: typeof group.services[number]) => (
             <View key={service.id} style={styles.serviceRow}>
               <View style={styles.serviceInfo}>
                 <Text style={styles.serviceName}>{service.name}</Text>
@@ -130,7 +130,7 @@ export default function QuoteDetailScreen() {
       {quote.materials && quote.materials.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Materiały</Text>
-          {quote.materials.map((material) => (
+          {quote.materials.map((material: typeof quote.materials[number]) => (
             <View key={material.id} style={styles.serviceRow}>
               <View style={styles.serviceInfo}>
                 <Text style={styles.serviceName}>{material.name}</Text>

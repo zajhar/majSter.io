@@ -13,7 +13,7 @@ const STATUS_CONFIG = {
 export default function QuotesListScreen() {
   const { data: quotes, isLoading } = trpc.quotes.list.useQuery()
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('pl-PL', {
       day: 'numeric',
       month: 'short',

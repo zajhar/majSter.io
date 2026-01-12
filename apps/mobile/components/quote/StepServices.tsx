@@ -151,7 +151,7 @@ export function StepServices({ onNext }: Props) {
             <View style={styles.templatesSection}>
               <Text style={styles.templatesTitle}>Szablony</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {templates.map((t) => (
+                {templates.map((t: NonNullable<typeof templates>[number]) => (
                   <Pressable
                     key={t.id}
                     style={styles.templateChip}
