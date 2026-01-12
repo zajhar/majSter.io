@@ -1,12 +1,16 @@
-import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native'
+import { useState } from 'react'
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../../lib/trpc'
+import { generateQuotePdf, shareQuotePdf } from '../../../services/pdf'
 
 export default function QuoteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { data: quote, isLoading } = trpc.quotes.byId.useQuery({ id: id! })
+  const { data: clients } = trpc.clients.list.useQuery()
   const utils = trpc.useUtils()
+  const [isSharing, setIsSharing] = useState(false)
 
   const deleteQuote = trpc.quotes.delete.useMutation({
     onSuccess: () => {
@@ -24,6 +28,57 @@ export default function QuoteDetailScreen() {
         onPress: () => deleteQuote.mutate({ id: id! }),
       },
     ])
+  }
+
+  const handleShare = async () => {
+    if (!quote) return
+
+    setIsSharing(true)
+    try {
+      const client = clients?.find((c) => c.id === quote.clientId)
+      if (!client) {
+        Alert.alert('Błąd', 'Nie znaleziono klienta')
+        return
+      }
+
+      const pdfUri = await generateQuotePdf({
+        number: quote.number,
+        client: {
+          firstName: client.firstName,
+          lastName: client.lastName,
+          siteAddress: client.siteAddress,
+        },
+        groups: quote.groups?.map((g) => ({
+          name: g.name,
+          services: g.services?.map((s) => ({
+            name: s.name,
+            quantity: Number(s.quantity),
+            unit: s.unit,
+            pricePerUnit: Number(s.pricePerUnit),
+            total: Number(s.total),
+          })) ?? [],
+        })) ?? [],
+        materials: quote.materials?.map((m) => ({
+          name: m.name,
+          quantity: Number(m.quantity),
+          unit: m.unit,
+          pricePerUnit: Number(m.pricePerUnit),
+          total: Number(m.total),
+        })) ?? [],
+        notesBefore: quote.notesBefore,
+        notesAfter: quote.notesAfter,
+        disclaimer: quote.disclaimer,
+        showDisclaimer: quote.showDisclaimer,
+        total: Number(quote.total),
+        createdAt: quote.createdAt,
+      })
+
+      await shareQuotePdf(pdfUri, quote.number)
+    } catch (error) {
+      Alert.alert('Błąd', error instanceof Error ? error.message : 'Nie udało się udostępnić')
+    } finally {
+      setIsSharing(false)
+    }
   }
 
   if (isLoading || !quote) {
@@ -99,9 +154,19 @@ export default function QuoteDetailScreen() {
 
       {/* Actions */}
       <View style={styles.actions}>
-        <Pressable style={styles.shareButton}>
-          <Ionicons name="share-outline" size={20} color="white" />
-          <Text style={styles.shareButtonText}>Udostępnij</Text>
+        <Pressable
+          style={[styles.shareButton, isSharing && styles.shareButtonDisabled]}
+          onPress={handleShare}
+          disabled={isSharing}
+        >
+          {isSharing ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <Ionicons name="share-outline" size={20} color="white" />
+          )}
+          <Text style={styles.shareButtonText}>
+            {isSharing ? 'Generowanie...' : 'Udostępnij PDF'}
+          </Text>
         </Pressable>
         <Pressable style={styles.deleteButton} onPress={handleDelete}>
           <Ionicons name="trash-outline" size={20} color="#dc2626" />
@@ -159,6 +224,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   shareButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  shareButtonDisabled: { opacity: 0.7 },
   deleteButton: {
     padding: 16,
     borderRadius: 12,
