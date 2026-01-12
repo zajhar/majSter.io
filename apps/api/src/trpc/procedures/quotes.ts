@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { eq, and, desc } from 'drizzle-orm'
+import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
-import { quotes, quoteGroups, quoteServices, quoteMaterials } from '@majsterio/db'
+import { quotes, quoteGroups, quoteServices, quoteMaterials, clients, subscriptions } from '@majsterio/db'
 import { createQuoteSchema } from '@majsterio/validators'
 
 // Helper to calculate m² from dimensions
@@ -192,5 +193,93 @@ export const quotesRouter = router({
         ))
 
       return { success: true }
+    }),
+
+  generatePdf: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Fetch quote with all relations
+      const [quote] = await ctx.db
+        .select()
+        .from(quotes)
+        .where(and(
+          eq(quotes.id, input.id),
+          eq(quotes.userId, ctx.user.id)
+        ))
+
+      if (!quote) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Quote not found' })
+      }
+
+      // Fetch client
+      const [client] = await ctx.db
+        .select()
+        .from(clients)
+        .where(eq(clients.id, quote.clientId))
+
+      if (!client) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Client not found' })
+      }
+
+      // Fetch groups with services
+      const groupsData = await ctx.db
+        .select()
+        .from(quoteGroups)
+        .where(eq(quoteGroups.quoteId, quote.id))
+        .orderBy(quoteGroups.sortOrder)
+
+      const groupsWithServices = await Promise.all(
+        groupsData.map(async (group) => {
+          const services = await ctx.db
+            .select()
+            .from(quoteServices)
+            .where(eq(quoteServices.groupId, group.id))
+            .orderBy(quoteServices.sortOrder)
+
+          return { ...group, services }
+        })
+      )
+
+      // Fetch materials
+      const materialsData = await ctx.db
+        .select()
+        .from(quoteMaterials)
+        .where(eq(quoteMaterials.quoteId, quote.id))
+        .orderBy(quoteMaterials.sortOrder)
+
+      // Check subscription for pro status
+      const [subscription] = await ctx.db
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.userId, ctx.user.id))
+
+      const isPro = subscription?.tier !== 'free'
+
+      // Generate PDF
+      const { generateQuotePdf } = await import('../../lib/pdf')
+
+      const pdfBuffer = await generateQuotePdf({
+        number: quote.number,
+        total: quote.total,
+        notesBefore: quote.notesBefore,
+        notesAfter: quote.notesAfter,
+        disclaimer: quote.disclaimer,
+        showDisclaimer: quote.showDisclaimer,
+        createdAt: quote.createdAt,
+        client: {
+          firstName: client.firstName,
+          lastName: client.lastName,
+          siteAddress: client.siteAddress,
+        },
+        groups: groupsWithServices,
+        materials: materialsData,
+      }, isPro)
+
+      // Return as base64
+      return {
+        filename: `wycena-${quote.number}.pdf`,
+        data: pdfBuffer.toString('base64'),
+        mimeType: 'application/pdf',
+      }
     }),
 })
