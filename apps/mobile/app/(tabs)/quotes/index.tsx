@@ -1,17 +1,18 @@
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native'
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { trpc } from '../../../lib/trpc'
+import { useQuotesList } from '../../../hooks/useOfflineQuotes'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 const STATUS_CONFIG = {
-  draft: { label: 'Szkic', color: '#6b7280', bg: '#f3f4f6' },
-  sent: { label: 'Wysłana', color: '#2563eb', bg: '#dbeafe' },
-  accepted: { label: 'Zaakceptowana', color: '#16a34a', bg: '#dcfce7' },
-  rejected: { label: 'Odrzucona', color: '#dc2626', bg: '#fee2e2' },
+  draft: { label: 'Szkic', color: colors.text.body, bg: '#F1F5F9' },
+  sent: { label: 'Wysłana', color: colors.primary.DEFAULT, bg: colors.primary[100] },
+  accepted: { label: 'Zaakceptowana', color: colors.success.DEFAULT, bg: colors.success[100] },
+  rejected: { label: 'Odrzucona', color: colors.error.DEFAULT, bg: colors.error[100] },
 }
 
 export default function QuotesListScreen() {
-  const { data: quotes, isLoading } = trpc.quotes.list.useQuery()
+  const { data: quotes, isLoading } = useQuotesList()
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('pl-PL', {
@@ -68,23 +69,40 @@ export default function QuotesListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: colors.background },
   list: { padding: 16 },
   quoteCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     marginBottom: 12,
+    ...shadows.md,
   },
   quoteHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  quoteNumber: { fontSize: 18, fontWeight: '600', color: '#1f2937' },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  statusText: { fontSize: 12, fontWeight: '500' },
-  quoteDate: { fontSize: 14, color: '#6b7280', marginTop: 4 },
+  quoteNumber: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 18,
+    color: colors.text.heading,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+  },
+  statusText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+  },
+  quoteDate: {
+    fontFamily: fontFamily.regular,
+    fontSize: 14,
+    color: colors.text.body,
+    marginTop: 4,
+  },
   quoteFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -92,11 +110,20 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: colors.border,
   },
-  quoteTotal: { fontSize: 20, fontWeight: '700', color: '#2563eb' },
+  quoteTotal: {
+    fontFamily: fontFamily.bold,
+    fontSize: 20,
+    color: colors.primary.DEFAULT,
+  },
   emptyContainer: { alignItems: 'center', paddingVertical: 64 },
-  emptyText: { fontSize: 16, color: '#6b7280', marginTop: 16 },
+  emptyText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: colors.text.body,
+    marginTop: 16,
+  },
   emptyList: { flex: 1, justifyContent: 'center' },
   fab: {
     position: 'absolute',
@@ -105,9 +132,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accent.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
+    ...shadows.lg,
   },
 })
