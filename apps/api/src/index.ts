@@ -5,8 +5,24 @@ import { appRouter, createContext } from './trpc/index.js'
 import { auth } from './lib/auth.js'
 import { registerWebhooks } from './routes/webhooks.js'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
+    ...(isProduction ? {} : {
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'HH:MM:ss Z',
+          ignore: 'pid,hostname',
+        },
+      },
+    }),
+  },
+  requestIdHeader: 'x-request-id',
+  genReqId: (req) => req.headers['x-request-id'] as string || crypto.randomUUID(),
 })
 
 await fastify.register(cors, {
@@ -53,7 +69,7 @@ const start = async () => {
   try {
     const port = Number(process.env.PORT) || 3001
     await fastify.listen({ port, host: '0.0.0.0' })
-    console.log(`Server running on port ${port}`)
+    fastify.log.info(`Server running on port ${port}`)
   } catch (err) {
     fastify.log.error(err)
     process.exit(1)

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./trpc": "./src/trpc/index.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -15,15 +18,15 @@
     "job:reset-quotas": "tsx src/jobs/resetQuotas.ts"
   },
   "dependencies": {
+    "@fastify/cors": "^10.0.0",
     "@majsterio/db": "workspace:*",
     "@majsterio/shared": "workspace:*",
     "@majsterio/validators": "workspace:*",
     "@react-pdf/renderer": "^4.3.0",
     "@trpc/server": "^11.0.0",
     "better-auth": "^1.2.0",
-    "fastify": "^5.2.0",
-    "@fastify/cors": "^10.0.0",
     "drizzle-orm": "^0.41.0",
+    "fastify": "^5.2.0",
     "postgres": "^3.4.0",
     "react": "^19.0.0",
     "zod": "^3.24.0"
@@ -32,6 +35,7 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "drizzle-kit": "^0.31.4",
+    "pino-pretty": "^13.1.3",
     "tsx": "^4.19.0",
     "typescript": "~5.9.2"
   }
