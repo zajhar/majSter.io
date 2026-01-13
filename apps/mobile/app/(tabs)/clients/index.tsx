@@ -2,11 +2,12 @@ import { View, Text, FlatList, Pressable, StyleSheet, TextInput } from 'react-na
 import { Link } from 'expo-router'
 import { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import { trpc } from '../../../lib/trpc'
+import { useClientsList } from '../../../hooks/useOfflineClients'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 export default function ClientsListScreen() {
   const [search, setSearch] = useState('')
-  const { data: clients, isLoading } = trpc.clients.list.useQuery()
+  const { data: clients, isLoading } = useClientsList()
 
   const filteredClients = clients?.filter((client) => {
     const fullName = `${client.firstName} ${client.lastName}`.toLowerCase()
@@ -17,7 +18,7 @@ export default function ClientsListScreen() {
     <View style={styles.container}>
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#6b7280" />
+        <Ionicons name="search" size={20} color={colors.text.body} />
         <TextInput
           style={styles.searchInput}
           placeholder="Szukaj klienta..."
@@ -50,7 +51,7 @@ export default function ClientsListScreen() {
               </View>
               {item.phone && (
                 <Pressable style={styles.phoneButton}>
-                  <Ionicons name="call-outline" size={20} color="#2563eb" />
+                  <Ionicons name="call-outline" size={20} color={colors.primary.DEFAULT} />
                 </Pressable>
               )}
             </Pressable>
@@ -58,7 +59,7 @@ export default function ClientsListScreen() {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color="#d1d5db" />
+            <Ionicons name="people-outline" size={64} color={colors.text.muted} />
             <Text style={styles.emptyText}>
               {isLoading ? 'Ładowanie...' : 'Brak klientów'}
             </Text>
@@ -80,55 +81,63 @@ export default function ClientsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     margin: 16,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     gap: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
   clientCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginBottom: 8,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     gap: 12,
+    ...shadows.md,
   },
   avatar: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: '#dbeafe',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary[100],
+    borderWidth: 2,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2563eb',
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
   },
   clientInfo: {
     flex: 1,
   },
   clientName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
   },
   clientAddress: {
     fontSize: 14,
-    color: '#6b7280',
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
     marginTop: 2,
   },
   phoneButton: {
@@ -141,7 +150,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#6b7280',
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
     marginTop: 16,
   },
   emptyList: {
@@ -153,14 +163,10 @@ const styles = StyleSheet.create({
     bottom: 16,
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563eb',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.accent.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...shadows.lg,
   },
 })
