@@ -1,10 +1,11 @@
 import { z } from 'zod'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, inArray } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, paidProcedure } from '../trpc.js'
 import { quotes, quoteGroups, quoteServices, quoteMaterials, clients, subscriptions } from '@majsterio/db'
 import { createQuoteSchema } from '@majsterio/validators'
 import { incrementQuoteCount } from '../../lib/subscription.js'
+import type { Database } from '../../db/index.js'
 
 // Helper to calculate m² from dimensions
 function calculateM2(length?: number, width?: number, height?: number) {
@@ -28,6 +29,62 @@ function getQuantity(source: string, group: { wallsM2: number | null; ceilingM2:
   }
 }
 
+// Efficient query to fetch quote with all relations
+async function fetchQuoteWithRelations(db: Database, quoteId: string, userId: string) {
+  const [quote] = await db
+    .select()
+    .from(quotes)
+    .where(and(
+      eq(quotes.id, quoteId),
+      eq(quotes.userId, userId)
+    ))
+
+  if (!quote) return null
+
+  // Fetch all data in parallel instead of sequential loops
+  const [groupsData, materialsData] = await Promise.all([
+    db
+      .select()
+      .from(quoteGroups)
+      .where(eq(quoteGroups.quoteId, quote.id))
+      .orderBy(quoteGroups.sortOrder),
+    db
+      .select()
+      .from(quoteMaterials)
+      .where(eq(quoteMaterials.quoteId, quote.id))
+      .orderBy(quoteMaterials.sortOrder),
+  ])
+
+  // Get all group IDs and fetch services in one query
+  const groupIds = groupsData.map(g => g.id)
+  const servicesData = groupIds.length > 0
+    ? await db
+        .select()
+        .from(quoteServices)
+        .where(inArray(quoteServices.groupId, groupIds))
+        .orderBy(quoteServices.sortOrder)
+    : []
+
+  // Group services by groupId
+  const servicesByGroup = new Map<string, typeof servicesData>()
+  for (const service of servicesData) {
+    const existing = servicesByGroup.get(service.groupId) || []
+    existing.push(service)
+    servicesByGroup.set(service.groupId, existing)
+  }
+
+  const groupsWithServices = groupsData.map(group => ({
+    ...group,
+    services: servicesByGroup.get(group.id) || [],
+  }))
+
+  return {
+    ...quote,
+    groups: groupsWithServices,
+    materials: materialsData,
+  }
+}
+
 export const quotesRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const result = await ctx.db
@@ -42,48 +99,7 @@ export const quotesRouter = router({
   byId: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const [quote] = await ctx.db
-        .select()
-        .from(quotes)
-        .where(and(
-          eq(quotes.id, input.id),
-          eq(quotes.userId, ctx.user.id)
-        ))
-
-      if (!quote) return null
-
-      // Fetch groups
-      const groups = await ctx.db
-        .select()
-        .from(quoteGroups)
-        .where(eq(quoteGroups.quoteId, quote.id))
-        .orderBy(quoteGroups.sortOrder)
-
-      // Fetch services for each group
-      const groupsWithServices = await Promise.all(
-        groups.map(async (group) => {
-          const services = await ctx.db
-            .select()
-            .from(quoteServices)
-            .where(eq(quoteServices.groupId, group.id))
-            .orderBy(quoteServices.sortOrder)
-
-          return { ...group, services }
-        })
-      )
-
-      // Fetch materials
-      const materials = await ctx.db
-        .select()
-        .from(quoteMaterials)
-        .where(eq(quoteMaterials.quoteId, quote.id))
-        .orderBy(quoteMaterials.sortOrder)
-
-      return {
-        ...quote,
-        groups: groupsWithServices,
-        materials,
-      }
+      return fetchQuoteWithRelations(ctx.db, input.id, ctx.user.id)
     }),
 
   create: paidProcedure
@@ -202,16 +218,10 @@ export const quotesRouter = router({
   generatePdf: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      // Fetch quote with all relations
-      const [quote] = await ctx.db
-        .select()
-        .from(quotes)
-        .where(and(
-          eq(quotes.id, input.id),
-          eq(quotes.userId, ctx.user.id)
-        ))
+      // Fetch quote with all relations efficiently
+      const quoteData = await fetchQuoteWithRelations(ctx.db, input.id, ctx.user.id)
 
-      if (!quote) {
+      if (!quoteData) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Quote not found' })
       }
 
@@ -219,37 +229,11 @@ export const quotesRouter = router({
       const [client] = await ctx.db
         .select()
         .from(clients)
-        .where(eq(clients.id, quote.clientId))
+        .where(eq(clients.id, quoteData.clientId))
 
       if (!client) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Client not found' })
       }
-
-      // Fetch groups with services
-      const groupsData = await ctx.db
-        .select()
-        .from(quoteGroups)
-        .where(eq(quoteGroups.quoteId, quote.id))
-        .orderBy(quoteGroups.sortOrder)
-
-      const groupsWithServices = await Promise.all(
-        groupsData.map(async (group) => {
-          const services = await ctx.db
-            .select()
-            .from(quoteServices)
-            .where(eq(quoteServices.groupId, group.id))
-            .orderBy(quoteServices.sortOrder)
-
-          return { ...group, services }
-        })
-      )
-
-      // Fetch materials
-      const materialsData = await ctx.db
-        .select()
-        .from(quoteMaterials)
-        .where(eq(quoteMaterials.quoteId, quote.id))
-        .orderBy(quoteMaterials.sortOrder)
 
       // Check subscription for pro status
       const [subscription] = await ctx.db
@@ -263,25 +247,25 @@ export const quotesRouter = router({
       const { generateQuotePdf } = await import('../../lib/pdf/index.js')
 
       const pdfBuffer = await generateQuotePdf({
-        number: quote.number,
-        total: quote.total,
-        notesBefore: quote.notesBefore,
-        notesAfter: quote.notesAfter,
-        disclaimer: quote.disclaimer,
-        showDisclaimer: quote.showDisclaimer,
-        createdAt: quote.createdAt,
+        number: quoteData.number,
+        total: quoteData.total,
+        notesBefore: quoteData.notesBefore,
+        notesAfter: quoteData.notesAfter,
+        disclaimer: quoteData.disclaimer,
+        showDisclaimer: quoteData.showDisclaimer,
+        createdAt: quoteData.createdAt,
         client: {
           firstName: client.firstName,
           lastName: client.lastName,
           siteAddress: client.siteAddress,
         },
-        groups: groupsWithServices,
-        materials: materialsData,
+        groups: quoteData.groups,
+        materials: quoteData.materials,
       }, isPro)
 
       // Return as base64
       return {
-        filename: `wycena-${quote.number}.pdf`,
+        filename: `wycena-${quoteData.number}.pdf`,
         data: pdfBuffer.toString('base64'),
         mimeType: 'application/pdf',
       }

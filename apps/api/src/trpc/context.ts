@@ -1,27 +1,15 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
-import { fromNodeHeaders } from 'better-auth/node'
+import type { CreateFastifyContextOptions } from '@trpc/server/adapters/fastify'
 import { getDb } from '../db/index.js'
 import { auth } from '../lib/auth.js'
 
-export interface User {
-  id: string
-  email: string
-  name: string
-}
+export async function createContext({ req, res }: CreateFastifyContextOptions) {
+  const db = getDb()
 
-export interface Context {
-  req: FastifyRequest
-  res: FastifyReply
-  db: ReturnType<typeof getDb>
-  user: User | null
-}
-
-export async function createContext({ req, res }: { req: FastifyRequest; res: FastifyReply }): Promise<Context> {
-  let user: User | null = null
+  let user: { id: string; email: string; name: string } | null = null
 
   try {
     const session = await auth.api.getSession({
-      headers: fromNodeHeaders(req.headers),
+      headers: req.headers as unknown as Headers,
     })
 
     if (session?.user) {
@@ -31,14 +19,20 @@ export async function createContext({ req, res }: { req: FastifyRequest; res: Fa
         name: session.user.name || '',
       }
     }
-  } catch {
-    // No session, user stays null
+  } catch (error) {
+    // Log auth errors but don't fail the request - user will be null
+    req.log.warn({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId: req.id,
+    }, 'Failed to get user session')
   }
 
   return {
     req,
     res,
-    db: getDb(),
+    db,
     user,
   }
 }
+
+export type Context = Awaited<ReturnType<typeof createContext>>

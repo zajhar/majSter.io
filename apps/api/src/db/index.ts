@@ -2,25 +2,33 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from '@majsterio/db'
 
-let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
+let client: ReturnType<typeof postgres> | null = null
+let db: ReturnType<typeof drizzle<typeof schema>> | null = null
 
 export function getDb() {
-  if (_db) return _db
+  if (db) return db
 
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
-    throw new Error('DATABASE_URL is required')
+    throw new Error('DATABASE_URL environment variable is required')
   }
 
-  const client = postgres(connectionString)
-  _db = drizzle(client, { schema })
-  return _db
+  client = postgres(connectionString, {
+    max: 10, // Connection pool size
+    idle_timeout: 20,
+    connect_timeout: 10,
+  })
+
+  db = drizzle(client, { schema })
+  return db
 }
 
-export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(_, prop) {
-    return getDb()[prop as keyof ReturnType<typeof drizzle<typeof schema>>]
-  },
-})
+export async function closeDb(): Promise<void> {
+  if (client) {
+    await client.end()
+    client = null
+    db = null
+  }
+}
 
 export type Database = ReturnType<typeof getDb>

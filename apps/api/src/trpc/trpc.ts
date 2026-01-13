@@ -2,7 +2,27 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import type { Context } from './context.js'
 import { getSubscriptionStatus } from '../lib/subscription.js'
 
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create({
+  errorFormatter({ shape, error, ctx }) {
+    // Log the error with request context
+    if (ctx?.req) {
+      ctx.req.log.error({
+        error: error.message,
+        code: error.code,
+        path: shape.data?.path,
+        requestId: ctx.req.id,
+      }, 'tRPC error')
+    }
+
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        requestId: ctx?.req?.id,
+      },
+    }
+  },
+})
 
 export const router = t.router
 export const publicProcedure = t.procedure
