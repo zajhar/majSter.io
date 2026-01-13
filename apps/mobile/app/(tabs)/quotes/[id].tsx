@@ -2,22 +2,27 @@ import { useState } from 'react'
 import { View, Text, ScrollView, StyleSheet, Pressable, Alert, ActivityIndicator } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { trpc } from '../../../lib/trpc'
+import { useQuoteById, useDeleteQuote } from '../../../hooks/useOfflineQuotes'
+import { useClientsList } from '../../../hooks/useOfflineClients'
+import { useSyncError } from '../../../hooks/useSyncError'
+import { SyncErrorBanner } from '../../../components/ui/SyncErrorBanner'
 import { generateQuotePdf, shareQuotePdf } from '../../../services/pdf'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
+
+const STATUS_CONFIG = {
+  draft: { label: 'Szkic', color: colors.text.body, bg: '#F1F5F9' },
+  sent: { label: 'Wysłana', color: colors.primary.DEFAULT, bg: colors.primary[100] },
+  accepted: { label: 'Zaakceptowana', color: colors.success.DEFAULT, bg: colors.success[100] },
+  rejected: { label: 'Odrzucona', color: colors.error.DEFAULT, bg: colors.error[100] },
+}
 
 export default function QuoteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { data: quote, isLoading } = trpc.quotes.byId.useQuery({ id: id! })
-  const { data: clients } = trpc.clients.list.useQuery()
-  const utils = trpc.useUtils()
+  const { data: quote, isLoading } = useQuoteById(id)
+  const { data: clients } = useClientsList()
+  const { deleteQuote: deleteQuoteFn } = useDeleteQuote()
+  const syncError = useSyncError(id)
   const [isSharing, setIsSharing] = useState(false)
-
-  const deleteQuote = trpc.quotes.delete.useMutation({
-    onSuccess: () => {
-      utils.quotes.list.invalidate()
-      router.back()
-    },
-  })
 
   const handleDelete = () => {
     Alert.alert('Usuń wycenę', 'Czy na pewno chcesz usunąć tę wycenę?', [
@@ -25,7 +30,14 @@ export default function QuoteDetailScreen() {
       {
         text: 'Usuń',
         style: 'destructive',
-        onPress: () => deleteQuote.mutate({ id: id! }),
+        onPress: async () => {
+          const result = await deleteQuoteFn(id!)
+          if (result.success) {
+            router.back()
+          } else {
+            Alert.alert('Błąd', result.error || 'Nie udało się usunąć wyceny')
+          }
+        },
       },
     ])
   }
@@ -84,17 +96,35 @@ export default function QuoteDetailScreen() {
   if (isLoading || !quote) {
     return (
       <View style={styles.loading}>
-        <Text>Ładowanie...</Text>
+        <ActivityIndicator size="large" color={colors.primary.DEFAULT} />
+        <Text style={styles.loadingText}>Ładowanie...</Text>
       </View>
     )
   }
 
+  const status = STATUS_CONFIG[quote.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.draft
+
   return (
     <ScrollView style={styles.container}>
+      {/* Sync Error */}
+      {syncError.hasError && (
+        <SyncErrorBanner
+          message={syncError.message!}
+          isRetrying={syncError.isRetrying}
+          onRetry={syncError.retry}
+          onDismiss={syncError.dismiss}
+        />
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.quoteNumber}>Wycena #{quote.number}</Text>
-        <Text style={styles.total}>{quote.total} zł</Text>
+        <Text style={styles.total}>{quote.total} zl</Text>
+        <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+          <Text style={[styles.statusText, { color: status.color }]}>
+            {status.label}
+          </Text>
+        </View>
       </View>
 
       {/* Notes Before */}
@@ -169,7 +199,7 @@ export default function QuoteDetailScreen() {
           </Text>
         </Pressable>
         <Pressable style={styles.deleteButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={20} color="#dc2626" />
+          <Ionicons name="trash-outline" size={20} color={colors.error.DEFAULT} />
         </Pressable>
       </View>
     </ScrollView>
@@ -177,35 +207,113 @@ export default function QuoteDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: colors.background },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: colors.text.body,
+    marginTop: 8,
+  },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 20,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderRadius: borderRadius.xl,
+    margin: 16,
+    marginBottom: 0,
+    ...shadows.md,
   },
-  quoteNumber: { fontSize: 16, color: '#6b7280' },
-  total: { fontSize: 36, fontWeight: '700', color: '#2563eb', marginTop: 8 },
-  section: { backgroundColor: 'white', padding: 16, marginTop: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#6b7280', marginBottom: 8 },
-  notes: { fontSize: 16, color: '#1f2937', lineHeight: 24 },
-  groupCard: { backgroundColor: 'white', padding: 16, marginTop: 12 },
-  groupName: { fontSize: 18, fontWeight: '600', color: '#1f2937' },
-  groupM2: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  quoteNumber: {
+    fontFamily: fontFamily.medium,
+    fontSize: 16,
+    color: colors.text.body,
+  },
+  total: {
+    fontFamily: fontFamily.bold,
+    fontSize: 36,
+    color: colors.primary.DEFAULT,
+    marginTop: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    marginTop: 12,
+  },
+  statusText: {
+    fontFamily: fontFamily.medium,
+    fontSize: 12,
+  },
+  section: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+    marginHorizontal: 16,
+    borderRadius: borderRadius.xl,
+    ...shadows.sm,
+  },
+  sectionTitle: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 14,
+    color: colors.text.body,
+    marginBottom: 8,
+  },
+  notes: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: colors.text.heading,
+    lineHeight: 24,
+  },
+  groupCard: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+    marginHorizontal: 16,
+    borderRadius: borderRadius.xl,
+    ...shadows.sm,
+  },
+  groupName: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 18,
+    color: colors.text.heading,
+  },
+  groupM2: {
+    fontFamily: fontFamily.regular,
+    fontSize: 14,
+    color: colors.text.body,
+    marginTop: 2,
+  },
   serviceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: colors.border,
   },
   serviceInfo: { flex: 1 },
-  serviceName: { fontSize: 16, color: '#1f2937' },
-  serviceQty: { fontSize: 14, color: '#6b7280', marginTop: 2 },
-  serviceTotal: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
+  serviceName: {
+    fontFamily: fontFamily.regular,
+    fontSize: 16,
+    color: colors.text.heading,
+  },
+  serviceQty: {
+    fontFamily: fontFamily.regular,
+    fontSize: 14,
+    color: colors.text.body,
+    marginTop: 2,
+  },
+  serviceTotal: {
+    fontFamily: fontFamily.semibold,
+    fontSize: 16,
+    color: colors.primary.DEFAULT,
+  },
   actions: {
     flexDirection: 'row',
     padding: 16,
@@ -218,18 +326,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accent.DEFAULT,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     gap: 8,
+    ...shadows.md,
   },
-  shareButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  shareButtonText: {
+    fontFamily: fontFamily.semibold,
+    color: colors.white,
+    fontSize: 16,
+  },
   shareButtonDisabled: { opacity: 0.7 },
   deleteButton: {
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#fee2e2',
-    backgroundColor: '#fef2f2',
+    borderColor: colors.error[100],
+    backgroundColor: colors.error[50],
   },
 })
