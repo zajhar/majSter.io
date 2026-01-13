@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
-import { db } from '../db'
-import { auth } from '../lib/auth'
+import { db } from '../db/index.js'
+import { auth } from '../lib/auth.js'
 
 export interface User {
   id: string
