@@ -6,12 +6,9 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
 import { trpc } from '../../lib/trpc'
+import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
-interface Props {
-  onNext: () => void
-}
-
-export function StepMaterials({ onNext }: Props) {
+export function StepMaterials() {
   const { draft, addMaterial, removeMaterial } = useQuoteStore()
   const { data: templates } = trpc.templates.materials.list.useQuery()
 
@@ -62,30 +59,30 @@ export function StepMaterials({ onNext }: Props) {
             <View style={styles.materialInfo}>
               <Text style={styles.materialName}>{item.name}</Text>
               <Text style={styles.materialDetails}>
-                {item.quantity} {item.unit} × {item.pricePerUnit} zł
+                {item.quantity} {item.unit} x {item.pricePerUnit} zl
               </Text>
             </View>
             <Text style={styles.materialTotal}>
-              {(item.quantity * item.pricePerUnit).toFixed(0)} zł
+              {(item.quantity * item.pricePerUnit).toFixed(0)} zl
             </Text>
             <Pressable onPress={() => removeMaterial(item.id)}>
-              <Ionicons name="close-circle" size={24} color="#dc2626" />
+              <Ionicons name="close-circle" size={24} color={colors.error.DEFAULT} />
             </Pressable>
           </View>
         )}
         ListHeaderComponent={
           draft.materials.length > 0 ? (
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>Materiały</Text>
-              <Text style={styles.headerTotal}>{materialsTotal.toFixed(0)} zł</Text>
+              <Text style={styles.headerTitle}>Materialy</Text>
+              <Text style={styles.headerTotal}>{materialsTotal.toFixed(0)} zl</Text>
             </View>
           ) : null
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="cart-outline" size={48} color="#d1d5db" />
-            <Text style={styles.emptyText}>Brak materiałów</Text>
-            <Text style={styles.emptySubtext}>Materiały są opcjonalne</Text>
+            <Ionicons name="cart-outline" size={48} color={colors.border} />
+            <Text style={styles.emptyText}>Brak materialow</Text>
+            <Text style={styles.emptySubtext}>Materialy sa opcjonalne</Text>
           </View>
         }
         contentContainerStyle={styles.list}
@@ -93,14 +90,8 @@ export function StepMaterials({ onNext }: Props) {
 
       {/* Add button */}
       <Pressable style={styles.addButton} onPress={() => setShowModal(true)}>
-        <Ionicons name="add" size={24} color="#2563eb" />
-        <Text style={styles.addButtonText}>Dodaj materiał</Text>
-      </Pressable>
-
-      {/* Next button (always visible - materials are optional) */}
-      <Pressable style={styles.nextButton} onPress={onNext}>
-        <Text style={styles.nextButtonText}>Dalej - Podgląd</Text>
-        <Ionicons name="arrow-forward" size={20} color="white" />
+        <Ionicons name="add-circle-outline" size={24} color={colors.primary.DEFAULT} />
+        <Text style={styles.addButtonText}>Dodaj material</Text>
       </Pressable>
 
       {/* Modal */}
@@ -110,7 +101,7 @@ export function StepMaterials({ onNext }: Props) {
             <Pressable onPress={() => { setShowModal(false); resetForm() }}>
               <Text style={styles.modalCancel}>Anuluj</Text>
             </Pressable>
-            <Text style={styles.modalTitle}>Dodaj materiał</Text>
+            <Text style={styles.modalTitle}>Dodaj material</Text>
             <Pressable onPress={handleSave}>
               <Text style={styles.modalSave}>Dodaj</Text>
             </Pressable>
@@ -135,20 +126,22 @@ export function StepMaterials({ onNext }: Props) {
           )}
 
           <View style={styles.modalContent}>
-            <Text style={styles.label}>Nazwa materiału</Text>
+            <Text style={styles.label}>Nazwa materialu</Text>
             <TextInput
               style={styles.input}
-              placeholder="np. Farba biała"
+              placeholder="np. Farba biala"
+              placeholderTextColor={colors.text.muted}
               value={name}
               onChangeText={setName}
             />
 
             <View style={styles.row}>
               <View style={styles.halfInput}>
-                <Text style={styles.label}>Ilość</Text>
+                <Text style={styles.label}>Ilosc</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="0"
+                  placeholderTextColor={colors.text.muted}
                   value={quantity}
                   onChangeText={setQuantity}
                   keyboardType="decimal-pad"
@@ -159,16 +152,18 @@ export function StepMaterials({ onNext }: Props) {
                 <TextInput
                   style={styles.input}
                   placeholder="szt"
+                  placeholderTextColor={colors.text.muted}
                   value={unit}
                   onChangeText={setUnit}
                 />
               </View>
             </View>
 
-            <Text style={styles.label}>Cena za jednostkę (zł)</Text>
+            <Text style={styles.label}>Cena za jednostke (zl)</Text>
             <TextInput
               style={styles.input}
               placeholder="0"
+              placeholderTextColor={colors.text.muted}
               value={pricePerUnit}
               onChangeText={setPricePerUnit}
               keyboardType="decimal-pad"
@@ -181,87 +176,166 @@ export function StepMaterials({ onNext }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  list: { padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  list: {
+    padding: 16,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  headerTitle: { fontSize: 18, fontWeight: '600', color: '#1f2937' },
-  headerTotal: { fontSize: 18, fontWeight: '600', color: '#2563eb' },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+  },
+  headerTotal: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
+  },
   materialRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     marginBottom: 8,
     gap: 8,
+    ...shadows.sm,
   },
-  materialInfo: { flex: 1 },
-  materialName: { fontSize: 16, color: '#1f2937' },
-  materialDetails: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  materialTotal: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
-  emptyContainer: { alignItems: 'center', paddingVertical: 48 },
-  emptyText: { fontSize: 16, color: '#6b7280', marginTop: 12 },
-  emptySubtext: { fontSize: 14, color: '#9ca3af', marginTop: 4 },
+  materialInfo: {
+    flex: 1,
+  },
+  materialName: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
+  },
+  materialDetails: {
+    fontSize: 12,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+    marginTop: 2,
+  },
+  materialTotal: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 48,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.text.body,
+    marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 4,
+  },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    margin: 16,
-    borderRadius: 12,
+    paddingVertical: 16,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: borderRadius.xl,
     borderWidth: 2,
-    borderColor: '#2563eb',
+    borderColor: colors.border,
     borderStyle: 'dashed',
     gap: 8,
   },
-  addButtonText: { fontSize: 16, color: '#2563eb', fontWeight: '500' },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563eb',
-    padding: 16,
-    margin: 16,
-    borderRadius: 12,
-    gap: 8,
+  addButtonText: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
   },
-  nextButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  modal: { flex: 1, backgroundColor: 'white' },
+  modal: {
+    flex: 1,
+    backgroundColor: colors.surface,
+  },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: colors.border,
   },
-  modalCancel: { fontSize: 16, color: '#6b7280' },
-  modalTitle: { fontSize: 18, fontWeight: '600' },
-  modalSave: { fontSize: 16, color: '#2563eb', fontWeight: '600' },
-  templatesSection: { padding: 16, borderBottomWidth: 1, borderBottomColor: '#e5e7eb' },
-  templatesTitle: { fontSize: 12, color: '#6b7280', marginBottom: 8 },
+  modalCancel: {
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+  },
+  modalSave: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
+  },
+  templatesSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  templatesTitle: {
+    fontSize: 12,
+    fontFamily: fontFamily.medium,
+    color: colors.text.body,
+    marginBottom: 8,
+  },
   templateChip: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.background,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 16,
+    borderRadius: borderRadius.full,
     marginRight: 8,
   },
-  templateChipText: { fontSize: 14, color: '#374151' },
-  modalContent: { padding: 16 },
-  label: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8, marginTop: 16 },
-  input: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 14,
-    borderRadius: 10,
-    fontSize: 16,
+  templateChipText: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
-  row: { flexDirection: 'row', gap: 12 },
-  halfInput: { flex: 1 },
+  modalContent: {
+    padding: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  input: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    borderRadius: borderRadius.lg,
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
 })

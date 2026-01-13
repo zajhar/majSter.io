@@ -1,17 +1,16 @@
 import { View, Text, FlatList, Pressable, StyleSheet, TextInput } from 'react-native'
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../lib/trpc'
 import { useQuoteStore } from '../../stores/quoteStore'
+import { AddClientBottomSheet, AddClientBottomSheetRef } from './AddClientBottomSheet'
+import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
-interface Props {
-  onNext: () => void
-}
-
-export function StepClient({ onNext }: Props) {
+export function StepClient() {
   const [search, setSearch] = useState('')
-  const { data: clients } = trpc.clients.list.useQuery()
+  const { data: clients, refetch } = trpc.clients.list.useQuery()
   const { draft, setClientId } = useQuoteStore()
+  const bottomSheetRef = useRef<AddClientBottomSheetRef>(null)
 
   const filteredClients = clients?.filter((c) => {
     const name = `${c.firstName} ${c.lastName}`.toLowerCase()
@@ -20,130 +19,215 @@ export function StepClient({ onNext }: Props) {
 
   const handleSelect = (clientId: string) => {
     setClientId(clientId)
-    onNext()
   }
 
-  const selectedClient = clients?.find((c) => c.id === draft.clientId)
+  const handleAddClient = useCallback(() => {
+    bottomSheetRef.current?.open()
+  }, [])
+
+  const handleClientCreated = useCallback((clientId: string) => {
+    refetch()
+    setClientId(clientId)
+  }, [refetch, setClientId])
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Ionicons name="people-outline" size={48} color={colors.border} />
+      <Text style={styles.emptyTitle}>Brak klientów</Text>
+      <Text style={styles.emptySubtitle}>Dodaj pierwszego klienta, aby rozpocząć</Text>
+    </View>
+  )
 
   return (
     <View style={styles.container}>
-      {/* Selected */}
-      {selectedClient && (
-        <View style={styles.selectedCard}>
-          <Text style={styles.selectedLabel}>Wybrany klient:</Text>
-          <Text style={styles.selectedName}>
-            {selectedClient.firstName} {selectedClient.lastName}
-          </Text>
-          <Pressable style={styles.nextButton} onPress={onNext}>
-            <Text style={styles.nextButtonText}>Dalej</Text>
-            <Ionicons name="arrow-forward" size={20} color="white" />
-          </Pressable>
-        </View>
-      )}
-
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#6b7280" />
+        <Ionicons name="search" size={20} color={colors.text.body} />
         <TextInput
           style={styles.searchInput}
           placeholder="Szukaj klienta..."
+          placeholderTextColor={colors.text.muted}
           value={search}
           onChangeText={setSearch}
         />
+        {search.length > 0 && (
+          <Pressable onPress={() => setSearch('')}>
+            <Ionicons name="close-circle" size={20} color={colors.text.muted} />
+          </Pressable>
+        )}
       </View>
 
       {/* List */}
       <FlatList
         data={filteredClients}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Pressable
-            style={[
-              styles.clientCard,
-              item.id === draft.clientId && styles.clientCardSelected,
-            ]}
-            onPress={() => handleSelect(item.id)}
-          >
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {item.firstName[0]}{item.lastName[0]}
-              </Text>
-            </View>
-            <View style={styles.clientInfo}>
-              <Text style={styles.clientName}>
-                {item.firstName} {item.lastName}
-              </Text>
-              {item.siteAddress && (
-                <Text style={styles.clientAddress}>{item.siteAddress}</Text>
+        renderItem={({ item }) => {
+          const isSelected = item.id === draft.clientId
+          return (
+            <Pressable
+              style={[
+                styles.clientCard,
+                isSelected && styles.clientCardSelected,
+              ]}
+              onPress={() => handleSelect(item.id)}
+            >
+              <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
+                <Text style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
+                  {item.firstName[0]}{item.lastName[0]}
+                </Text>
+              </View>
+              <View style={styles.clientInfo}>
+                <Text style={[styles.clientName, isSelected && styles.clientNameSelected]}>
+                  {item.firstName} {item.lastName}
+                </Text>
+                {item.siteAddress && (
+                  <Text style={styles.clientAddress}>{item.siteAddress}</Text>
+                )}
+                {item.phone && (
+                  <Text style={styles.clientPhone}>{item.phone}</Text>
+                )}
+              </View>
+              {isSelected && (
+                <Ionicons name="checkmark-circle" size={24} color={colors.primary.DEFAULT} />
               )}
-            </View>
-            {item.id === draft.clientId && (
-              <Ionicons name="checkmark-circle" size={24} color="#2563eb" />
-            )}
+            </Pressable>
+          )
+        }}
+        ListEmptyComponent={!search ? renderEmptyState : null}
+        ListFooterComponent={
+          <Pressable style={styles.addClientButton} onPress={handleAddClient}>
+            <Ionicons name="add-circle-outline" size={24} color={colors.primary.DEFAULT} />
+            <Text style={styles.addClientText}>Dodaj nowego klienta</Text>
           </Pressable>
-        )}
+        }
         contentContainerStyle={styles.list}
+      />
+
+      <AddClientBottomSheet
+        ref={bottomSheetRef}
+        onClientCreated={handleClientCreated}
       />
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  selectedCard: {
-    backgroundColor: '#dbeafe',
-    padding: 16,
-    margin: 16,
-    borderRadius: 12,
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  selectedLabel: { fontSize: 12, color: '#1e40af' },
-  selectedName: { fontSize: 18, fontWeight: '600', color: '#1e40af', marginTop: 4 },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563eb',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-    gap: 8,
-  },
-  nextButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
+    marginTop: 16,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
     gap: 8,
   },
-  searchInput: { flex: 1, fontSize: 16 },
-  list: { padding: 16 },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
+  },
+  list: {
+    padding: 16,
+    paddingBottom: 32,
+  },
   clientCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     marginBottom: 8,
     gap: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    ...shadows.sm,
   },
   clientCardSelected: {
-    backgroundColor: '#eff6ff',
-    borderWidth: 2,
-    borderColor: '#2563eb',
+    backgroundColor: colors.primary[50],
+    borderColor: colors.primary.DEFAULT,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#dbeafe',
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 14, fontWeight: '600', color: '#2563eb' },
-  clientInfo: { flex: 1 },
-  clientName: { fontSize: 16, fontWeight: '500', color: '#1f2937' },
-  clientAddress: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  avatarSelected: {
+    backgroundColor: colors.primary.DEFAULT,
+  },
+  avatarText: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.body,
+  },
+  avatarTextSelected: {
+    color: colors.white,
+  },
+  clientInfo: {
+    flex: 1,
+  },
+  clientName: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
+  },
+  clientNameSelected: {
+    fontFamily: fontFamily.semibold,
+    color: colors.primary[700],
+  },
+  clientAddress: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+    marginTop: 2,
+  },
+  clientPhone: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 2,
+  },
+  addClientButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    marginTop: 8,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    borderRadius: borderRadius.xl,
+  },
+  addClientText: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.body,
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 4,
+  },
 })
