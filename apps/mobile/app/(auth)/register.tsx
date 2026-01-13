@@ -14,6 +14,8 @@ import {
 import { Link, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../stores/authStore'
+import { clearLocalDatabase } from '../../db'
+import { colors, fontFamily, borderRadius } from '../../constants/theme'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -27,17 +29,17 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Błąd', 'Wypełnij wszystkie pola')
+      Alert.alert('Blad', 'Wypelnij wszystkie pola')
       return
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Błąd', 'Hasła nie są takie same')
+      Alert.alert('Blad', 'Hasla nie sa takie same')
       return
     }
 
     if (password.length < 8) {
-      Alert.alert('Błąd', 'Hasło musi mieć co najmniej 8 znaków')
+      Alert.alert('Blad', 'Haslo musi miec co najmniej 8 znakow')
       return
     }
 
@@ -46,21 +48,30 @@ export default function RegisterScreen() {
     try {
       const response = await fetch(`${API_URL}/api/auth/sign-up/email`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': 'exp://localhost',
+        },
         body: JSON.stringify({ name, email, password }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Błąd rejestracji')
+        throw new Error(data.message || 'Blad rejestracji')
+      }
+
+      // Wyczysc lokalne dane jesli rejestruje sie inny uzytkownik
+      const previousUserId = useAuthStore.getState().user?.id
+      if (previousUserId && previousUserId !== data.user.id) {
+        await clearLocalDatabase()
       }
 
       setUser(data.user)
       setToken(data.token)
       router.replace('/(tabs)')
     } catch (error) {
-      Alert.alert('Błąd', error instanceof Error ? error.message : 'Błąd rejestracji')
+      Alert.alert('Blad', error instanceof Error ? error.message : 'Blad rejestracji')
     } finally {
       setIsLoading(false)
     }
@@ -77,19 +88,20 @@ export default function RegisterScreen() {
           <View style={styles.header}>
             <Link href="/(auth)/login" asChild>
               <Pressable style={styles.backButton}>
-                <Ionicons name="arrow-back" size={24} color="#1f2937" />
+                <Ionicons name="arrow-back" size={24} color={colors.text.heading} />
               </Pressable>
             </Link>
-            <Text style={styles.title}>Utwórz konto</Text>
+            <Text style={styles.title}>Utworz konto</Text>
             <Text style={styles.subtitle}>
-              Dołącz do tysięcy fachowców korzystających z Majsterio
+              Dolacz do tysiecy fachowcow korzystajacych z OdFachowca
             </Text>
           </View>
 
           {/* Form */}
           <TextInput
             style={styles.input}
-            placeholder="Imię i nazwisko"
+            placeholder="Imie i nazwisko"
+            placeholderTextColor={colors.text.muted}
             value={name}
             onChangeText={setName}
           />
@@ -97,6 +109,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor={colors.text.muted}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -105,7 +118,8 @@ export default function RegisterScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Hasło (min. 8 znaków)"
+            placeholder="Haslo (min. 8 znakow)"
+            placeholderTextColor={colors.text.muted}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -113,7 +127,8 @@ export default function RegisterScreen() {
 
           <TextInput
             style={styles.input}
-            placeholder="Powtórz hasło"
+            placeholder="Powtorz haslo"
+            placeholderTextColor={colors.text.muted}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
@@ -127,16 +142,16 @@ export default function RegisterScreen() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.registerButtonText}>Zarejestruj się</Text>
+              <Text style={styles.registerButtonText}>Zarejestruj sie</Text>
             )}
           </Pressable>
 
           {/* Login link */}
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Masz już konto? </Text>
+            <Text style={styles.loginText}>Masz juz konto? </Text>
             <Link href="/(auth)/login" asChild>
               <Pressable>
-                <Text style={styles.loginLink}>Zaloguj się</Text>
+                <Text style={styles.loginLink}>Zaloguj sie</Text>
               </Pressable>
             </Link>
           </View>
@@ -149,7 +164,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -166,28 +181,31 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
+    fontFamily: fontFamily.bold,
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1f2937',
+    color: colors.text.heading,
   },
   subtitle: {
+    fontFamily: fontFamily.regular,
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.text.body,
     marginTop: 8,
   },
   input: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
+    fontFamily: fontFamily.regular,
     fontSize: 16,
+    color: colors.text.heading,
     marginBottom: 12,
   },
   registerButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accent.DEFAULT,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -195,9 +213,9 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   registerButtonText: {
-    color: 'white',
+    color: colors.white,
+    fontFamily: fontFamily.semibold,
     fontSize: 18,
-    fontWeight: '600',
   },
   loginContainer: {
     flexDirection: 'row',
@@ -205,10 +223,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   loginText: {
-    color: '#6b7280',
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
   },
   loginLink: {
-    color: '#2563eb',
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
   },
 })
