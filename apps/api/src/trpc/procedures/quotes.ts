@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { eq, and, desc } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
-import { router, protectedProcedure } from '../trpc'
+import { router, protectedProcedure, paidProcedure } from '../trpc.js'
 import { quotes, quoteGroups, quoteServices, quoteMaterials, clients, subscriptions } from '@majsterio/db'
 import { createQuoteSchema } from '@majsterio/validators'
+import { incrementQuoteCount } from '../../lib/subscription.js'
 
 // Helper to calculate m² from dimensions
 function calculateM2(length?: number, width?: number, height?: number) {
@@ -85,7 +86,7 @@ export const quotesRouter = router({
       }
     }),
 
-  create: protectedProcedure
+  create: paidProcedure
     .input(createQuoteSchema)
     .mutation(async ({ ctx, input }) => {
       // Create quote
@@ -178,6 +179,9 @@ export const quotesRouter = router({
         .update(quotes)
         .set({ total: totalSum.toString() })
         .where(eq(quotes.id, quote.id))
+
+      // Increment quote count for subscription
+      await incrementQuoteCount(ctx.user.id)
 
       return { ...quote, total: totalSum.toString() }
     }),
