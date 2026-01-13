@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../lib/trpc'
+import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
 export default function DashboardScreen() {
   const { data: subscription } = trpc.subscriptions.status.useQuery()
@@ -55,7 +56,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
     padding: 16,
   },
   statsContainer: {
@@ -65,69 +66,70 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: borderRadius.xl,
+    ...shadows.md,
   },
   statNumber: {
+    fontFamily: fontFamily.bold,
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#2563eb',
+    color: colors.primary.DEFAULT,
   },
   statLabel: {
+    fontFamily: fontFamily.regular,
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.text.body,
     marginTop: 4,
   },
   createButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accent.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     gap: 8,
     marginBottom: 24,
   },
   createButtonText: {
-    color: 'white',
+    color: colors.white,
+    fontFamily: fontFamily.semibold,
     fontSize: 18,
-    fontWeight: '600',
   },
   section: {
     flex: 1,
   },
   sectionTitle: {
+    fontFamily: fontFamily.semibold,
     fontSize: 18,
-    fontWeight: '600',
+    color: colors.text.heading,
     marginBottom: 12,
   },
   emptyText: {
-    color: '#6b7280',
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
     textAlign: 'center',
     marginTop: 24,
   },
   quoteCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: borderRadius.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    ...shadows.sm,
   },
   quoteNumber: {
+    fontFamily: fontFamily.medium,
     fontSize: 16,
-    fontWeight: '500',
+    color: colors.text.heading,
   },
   quoteTotal: {
+    fontFamily: fontFamily.semibold,
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2563eb',
+    color: colors.primary.DEFAULT,
   },
 })
