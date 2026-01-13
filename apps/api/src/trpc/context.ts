@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
+import { fromNodeHeaders } from 'better-auth/node'
 import { db } from '../db/index.js'
 import { auth } from '../lib/auth.js'
 
@@ -20,7 +21,7 @@ export async function createContext({ req, res }: { req: FastifyRequest; res: Fa
 
   try {
     const session = await auth.api.getSession({
-      headers: req.headers as unknown as Headers,
+      headers: fromNodeHeaders(req.headers),
     })
 
     if (session?.user) {
