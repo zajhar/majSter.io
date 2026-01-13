@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { eq, and, desc } from 'drizzle-orm'
-import { router, protectedProcedure } from '../trpc'
+import { router, protectedProcedure } from '../trpc.js'
 import { clients } from '@majsterio/db'
 import { createClientSchema, updateClientSchema } from '@majsterio/validators'
 

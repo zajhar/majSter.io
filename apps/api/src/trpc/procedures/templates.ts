@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { eq, and, or } from 'drizzle-orm'
-import { router, protectedProcedure } from '../trpc'
+import { router, protectedProcedure } from '../trpc.js'
 import { serviceTemplates, materialTemplates } from '@majsterio/db'
 import { createServiceTemplateSchema, createMaterialTemplateSchema } from '@majsterio/validators'
 

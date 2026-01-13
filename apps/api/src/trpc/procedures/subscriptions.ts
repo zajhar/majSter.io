@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm'
-import { router, protectedProcedure } from '../trpc'
+import { router, protectedProcedure } from '../trpc.js'
 import { subscriptions } from '@majsterio/db'
 import { SUBSCRIPTION_LIMITS } from '@majsterio/shared'
 
