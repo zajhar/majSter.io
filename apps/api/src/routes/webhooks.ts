@@ -64,7 +64,7 @@ export async function registerWebhooks(app: FastifyInstance) {
       // Add to cache with size limit
       if (processedEvents.size >= MAX_CACHE_SIZE) {
         const firstKey = processedEvents.values().next().value
-        processedEvents.delete(firstKey)
+        if (firstKey) processedEvents.delete(firstKey)
       }
       processedEvents.add(eventId)
     }

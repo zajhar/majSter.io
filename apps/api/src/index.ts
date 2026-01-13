@@ -27,18 +27,20 @@ const fastify = Fastify({
 
 // Global error handler
 fastify.setErrorHandler((error, request, reply) => {
+  const err = error as Error & { statusCode?: number }
+
   request.log.error({
-    err: error,
+    err,
     requestId: request.id,
     url: request.url,
     method: request.method,
   }, 'Unhandled error')
 
   // Don't expose internal errors in production
-  const statusCode = error.statusCode ?? 500
+  const statusCode = err.statusCode ?? 500
   const message = statusCode >= 500 && isProduction
     ? 'Internal Server Error'
-    : error.message
+    : err.message
 
   reply.status(statusCode).send({
     error: {
