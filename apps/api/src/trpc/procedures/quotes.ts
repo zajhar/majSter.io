@@ -260,7 +260,7 @@ export const quotesRouter = router({
       const isPro = subscription?.tier !== 'free'
 
       // Generate PDF
-      const { generateQuotePdf } = await import('../../lib/pdf')
+      const { generateQuotePdf } = await import('../../lib/pdf/index.js')
 
       const pdfBuffer = await generateQuotePdf({
         number: quote.number,

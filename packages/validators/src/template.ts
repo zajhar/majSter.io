@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { quantitySourceSchema } from './quote'
+import { quantitySourceSchema } from './quote.js'
 
 export const createServiceTemplateSchema = z.object({
   name: z.string().min(1, 'Nazwa jest wymagana').max(200),

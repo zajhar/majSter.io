@@ -1,4 +1,4 @@
-import type { QuantitySource } from './quote'
+import type { QuantitySource } from './quote.js'
 
 export interface ServiceTemplate {
   id: string
