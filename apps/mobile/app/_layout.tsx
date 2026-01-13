@@ -4,13 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as SplashScreen from 'expo-splash-screen'
-import {
-  useFonts,
-  Nunito_400Regular,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-} from '@expo-google-fonts/nunito'
+import { useFonts } from 'expo-font'
 import { trpc } from '../lib/trpc'
 import { queryClient, trpcClient } from '../lib/api'
 import { OfflineIndicator } from '../components/ui/OfflineIndicator'
@@ -27,10 +21,10 @@ export default function RootLayout() {
   const isLoading = useAuthStore((s) => s.isLoading)
 
   const [fontsLoaded] = useFonts({
-    'Nunito-Regular': Nunito_400Regular,
-    'Nunito-Medium': Nunito_500Medium,
-    'Nunito-SemiBold': Nunito_600SemiBold,
-    'Nunito-Bold': Nunito_700Bold,
+    'Nunito-Regular': require('@expo-google-fonts/nunito/400Regular/Nunito_400Regular.ttf'),
+    'Nunito-Medium': require('@expo-google-fonts/nunito/500Medium/Nunito_500Medium.ttf'),
+    'Nunito-SemiBold': require('@expo-google-fonts/nunito/600SemiBold/Nunito_600SemiBold.ttf'),
+    'Nunito-Bold': require('@expo-google-fonts/nunito/700Bold/Nunito_700Bold.ttf'),
   })
 
   useEffect(() => {
