@@ -11,7 +11,8 @@
     "check-types": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "job:reset-quotas": "tsx src/jobs/resetQuotas.ts"
   },
   "dependencies": {
     "@majsterio/db": "workspace:*",
