@@ -1,3 +1,3 @@
-export { appRouter, type AppRouter } from './router'
-export { createContext, type Context } from './context'
-export { router, publicProcedure, protectedProcedure } from './trpc'
+export { appRouter, type AppRouter } from './router.js'
+export { createContext, type Context } from './context.js'
+export { router, publicProcedure, protectedProcedure, paidProcedure } from './trpc.js'

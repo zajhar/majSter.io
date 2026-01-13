@@ -11,7 +11,8 @@
     "check-types": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "job:reset-quotas": "tsx src/jobs/resetQuotas.ts"
   },
   "dependencies": {
     "@majsterio/db": "workspace:*",
@@ -24,10 +25,12 @@
     "@fastify/cors": "^10.0.0",
     "drizzle-orm": "^0.41.0",
     "postgres": "^3.4.0",
+    "react": "^19.0.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
     "drizzle-kit": "^0.31.4",
     "tsx": "^4.19.0",
     "typescript": "~5.9.2"
