@@ -1,8 +1,8 @@
-import { router, publicProcedure, protectedProcedure } from './trpc'
-import { clientsRouter } from './procedures/clients'
-import { quotesRouter } from './procedures/quotes'
-import { templatesRouter } from './procedures/templates'
-import { subscriptionsRouter } from './procedures/subscriptions'
+import { router, publicProcedure, protectedProcedure } from './trpc.js'
+import { clientsRouter } from './procedures/clients.js'
+import { quotesRouter } from './procedures/quotes.js'
+import { templatesRouter } from './procedures/templates.js'
+import { subscriptionsRouter } from './procedures/subscriptions.js'
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
