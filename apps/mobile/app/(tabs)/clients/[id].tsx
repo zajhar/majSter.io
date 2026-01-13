@@ -11,41 +11,30 @@ import {
 } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useClientById, useUpdateClient, useDeleteClient } from '../../../hooks/useOfflineClients'
+import { useSyncError } from '../../../hooks/useSyncError'
+import { SyncErrorBanner } from '../../../components/ui/SyncErrorBanner'
 import { trpc } from '../../../lib/trpc'
+import { useSyncStore } from '../../../stores/syncStore'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 export default function ClientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const { data: client, isLoading } = trpc.clients.byId.useQuery({ id: id! })
+  const { data: client, isLoading } = useClientById(id)
   const { data: quotes } = trpc.quotes.list.useQuery()
-  const utils = trpc.useUtils()
+  const isOnline = useSyncStore((s) => s.isOnline)
+  const syncError = useSyncError(id)
 
   const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [phone, setPhone] = useState('')
   const [siteAddress, setSiteAddress] = useState('')
   const [notes, setNotes] = useState('')
 
-  const updateClient = trpc.clients.update.useMutation({
-    onSuccess: () => {
-      utils.clients.list.invalidate()
-      utils.clients.byId.invalidate({ id: id! })
-      setIsEditing(false)
-    },
-    onError: (error) => {
-      Alert.alert('Błąd', error.message)
-    },
-  })
-
-  const deleteClient = trpc.clients.delete.useMutation({
-    onSuccess: () => {
-      utils.clients.list.invalidate()
-      router.back()
-    },
-    onError: (error) => {
-      Alert.alert('Błąd', error.message)
-    },
-  })
+  const { update } = useUpdateClient()
+  const { deleteClient: deleteClientFn } = useDeleteClient()
 
   const startEditing = () => {
     if (client) {
@@ -58,22 +47,27 @@ export default function ClientDetailScreen() {
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) {
       Alert.alert('Błąd', 'Imię i nazwisko są wymagane')
       return
     }
 
-    updateClient.mutate({
-      id: id!,
-      data: {
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        phone: phone.trim() || undefined,
-        siteAddress: siteAddress.trim() || undefined,
-        notes: notes.trim() || undefined,
-      },
+    setIsSaving(true)
+    const result = await update(id!, {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone.trim() || undefined,
+      siteAddress: siteAddress.trim() || undefined,
+      notes: notes.trim() || undefined,
     })
+    setIsSaving(false)
+
+    if (result.success) {
+      setIsEditing(false)
+    } else {
+      Alert.alert('Błąd', result.error || 'Nie udało się zaktualizować klienta')
+    }
   }
 
   const handleDelete = () => {
@@ -85,7 +79,14 @@ export default function ClientDetailScreen() {
         {
           text: 'Usuń',
           style: 'destructive',
-          onPress: () => deleteClient.mutate({ id: id! }),
+          onPress: async () => {
+            const result = await deleteClientFn(id!)
+            if (result.success) {
+              router.back()
+            } else {
+              Alert.alert('Błąd', result.error || 'Nie udało się usunąć klienta')
+            }
+          },
         },
       ]
     )
@@ -115,9 +116,9 @@ export default function ClientDetailScreen() {
             <Text style={styles.cancelText}>Anuluj</Text>
           </Pressable>
           <Text style={styles.editTitle}>Edytuj klienta</Text>
-          <Pressable onPress={handleSave} disabled={updateClient.isPending}>
-            <Text style={[styles.saveText, updateClient.isPending && styles.saveTextDisabled]}>
-              {updateClient.isPending ? 'Zapisuję...' : 'Zapisz'}
+          <Pressable onPress={handleSave} disabled={isSaving}>
+            <Text style={[styles.saveText, isSaving && styles.saveTextDisabled]}>
+              {isSaving ? 'Zapisuję...' : 'Zapisz'}
             </Text>
           </Pressable>
         </View>
@@ -172,6 +173,16 @@ export default function ClientDetailScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      {/* Sync Error */}
+      {syncError.hasError && (
+        <SyncErrorBanner
+          message={syncError.message!}
+          isRetrying={syncError.isRetrying}
+          onRetry={syncError.retry}
+          onDismiss={syncError.dismiss}
+        />
+      )}
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.avatar}>
@@ -189,19 +200,19 @@ export default function ClientDetailScreen() {
       <View style={styles.quickActions}>
         {client.phone && (
           <Pressable style={styles.actionButton} onPress={handleCall}>
-            <Ionicons name="call" size={24} color="#2563eb" />
+            <Ionicons name="call" size={24} color={colors.primary.DEFAULT} />
             <Text style={styles.actionText}>Zadzwoń</Text>
           </Pressable>
         )}
         <Pressable style={styles.actionButton} onPress={startEditing}>
-          <Ionicons name="pencil" size={24} color="#2563eb" />
+          <Ionicons name="pencil" size={24} color={colors.primary.DEFAULT} />
           <Text style={styles.actionText}>Edytuj</Text>
         </Pressable>
         <Pressable
           style={styles.actionButton}
           onPress={() => router.push(`/quote/create?clientId=${id}`)}
         >
-          <Ionicons name="add-circle" size={24} color="#2563eb" />
+          <Ionicons name="add-circle" size={24} color={colors.primary.DEFAULT} />
           <Text style={styles.actionText}>Nowa wycena</Text>
         </Pressable>
       </View>
@@ -210,11 +221,11 @@ export default function ClientDetailScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Kontakt</Text>
         <View style={styles.infoRow}>
-          <Ionicons name="call-outline" size={20} color="#6b7280" />
+          <Ionicons name="call-outline" size={20} color={colors.text.body} />
           <Text style={styles.infoText}>{client.phone || 'Brak telefonu'}</Text>
         </View>
         <View style={styles.infoRow}>
-          <Ionicons name="location-outline" size={20} color="#6b7280" />
+          <Ionicons name="location-outline" size={20} color={colors.text.body} />
           <Text style={styles.infoText}>{client.siteAddress || 'Brak adresu'}</Text>
         </View>
       </View>
@@ -246,7 +257,7 @@ export default function ClientDetailScreen() {
                 </Text>
               </View>
               <Text style={styles.quoteTotal}>{quote.total} zł</Text>
-              <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              <Ionicons name="chevron-forward" size={20} color={colors.text.muted} />
             </Pressable>
           ))
         )}
@@ -255,7 +266,7 @@ export default function ClientDetailScreen() {
       {/* Delete */}
       <View style={styles.dangerSection}>
         <Pressable style={styles.deleteButton} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={20} color="#dc2626" />
+          <Ionicons name="trash-outline" size={20} color={colors.error.DEFAULT} />
           <Text style={styles.deleteText}>Usuń klienta</Text>
         </Pressable>
       </View>
@@ -264,93 +275,180 @@ export default function ClientDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: colors.background },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
   header: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 24,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: colors.border,
+    ...shadows.sm,
   },
   avatar: {
     width: 80,
     height: 80,
-    borderRadius: 40,
-    backgroundColor: '#dbeafe',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 28, fontWeight: '600', color: '#2563eb' },
-  name: { fontSize: 24, fontWeight: '600', color: '#1f2937', marginTop: 16 },
-  address: { fontSize: 14, color: '#6b7280', marginTop: 4 },
+  avatarText: {
+    fontSize: 28,
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
+  },
+  name: {
+    fontSize: 24,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+    marginTop: 16,
+  },
+  address: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+    marginTop: 4,
+  },
   quickActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     paddingVertical: 16,
     marginTop: 12,
+    ...shadows.sm,
   },
   actionButton: { alignItems: 'center', gap: 4 },
-  actionText: { fontSize: 12, color: '#2563eb' },
-  section: { backgroundColor: 'white', padding: 16, marginTop: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#6b7280', marginBottom: 12 },
+  actionText: {
+    fontSize: 12,
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
+  },
+  section: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+    ...shadows.sm,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.body,
+    marginBottom: 12,
+  },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
-  infoText: { fontSize: 16, color: '#1f2937' },
-  notesText: { fontSize: 16, color: '#1f2937', lineHeight: 24 },
-  emptyText: { fontSize: 14, color: '#9ca3af', fontStyle: 'italic' },
+  infoText: {
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
+  },
+  notesText: {
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
+    lineHeight: 24,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    fontStyle: 'italic',
+  },
   quoteRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: colors.border,
   },
   quoteInfo: { flex: 1 },
-  quoteNumber: { fontSize: 16, fontWeight: '500', color: '#1f2937' },
-  quoteDate: { fontSize: 12, color: '#6b7280', marginTop: 2 },
-  quoteTotal: { fontSize: 16, fontWeight: '600', color: '#2563eb', marginRight: 8 },
-  dangerSection: { backgroundColor: 'white', padding: 16, marginTop: 12, marginBottom: 32 },
+  quoteNumber: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
+  },
+  quoteDate: {
+    fontSize: 12,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+    marginTop: 2,
+  },
+  quoteTotal: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
+    marginRight: 8,
+  },
+  dangerSection: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+    marginBottom: 32,
+    ...shadows.sm,
+  },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#fee2e2',
-    backgroundColor: '#fef2f2',
+    borderColor: colors.error[100],
+    backgroundColor: colors.error[50],
     gap: 8,
   },
-  deleteText: { fontSize: 16, color: '#dc2626', fontWeight: '500' },
+  deleteText: {
+    fontSize: 16,
+    fontFamily: fontFamily.medium,
+    color: colors.error.DEFAULT,
+  },
   editHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: colors.border,
   },
-  editTitle: { fontSize: 18, fontWeight: '600', color: '#1f2937' },
-  cancelText: { fontSize: 16, color: '#6b7280' },
-  saveText: { fontSize: 16, color: '#2563eb', fontWeight: '600' },
+  editTitle: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+  },
+  cancelText: {
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+  },
+  saveText: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
+  },
   saveTextDisabled: { opacity: 0.5 },
   form: { padding: 16 },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: borderRadius.md,
     fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
   textArea: { height: 100, textAlignVertical: 'top' },
 })
