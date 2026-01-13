@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../../lib/trpc'
 import type { QuantitySource } from '@majsterio/shared'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 const QUANTITY_SOURCES: { value: QuantitySource; label: string }[] = [
   { value: 'manual', label: 'Ręcznie' },
@@ -101,10 +102,10 @@ export default function TemplatesScreen() {
             {!item.isSystem && (
               <View style={styles.actions}>
                 <Pressable onPress={() => handleEdit(item)}>
-                  <Ionicons name="pencil" size={20} color="#6b7280" />
+                  <Ionicons name="pencil" size={20} color={colors.text.body} />
                 </Pressable>
                 <Pressable onPress={() => handleDelete(item.id)}>
-                  <Ionicons name="trash-outline" size={20} color="#dc2626" />
+                  <Ionicons name="trash-outline" size={20} color={colors.error.DEFAULT} />
                 </Pressable>
               </View>
             )}
@@ -127,7 +128,7 @@ export default function TemplatesScreen() {
 
       {/* FAB */}
       <Pressable style={styles.fab} onPress={() => setShowModal(true)}>
-        <Ionicons name="add" size={28} color="white" />
+        <Ionicons name="add" size={28} color={colors.white} />
       </Pressable>
 
       {/* Modal */}
@@ -206,62 +207,65 @@ export default function TemplatesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: colors.background },
   list: { padding: 16 },
   templateCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     marginBottom: 8,
+    ...shadows.sm,
   },
   templateInfo: { flex: 1 },
-  templateName: { fontSize: 16, fontWeight: '500', color: '#1f2937' },
-  templateDetails: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  templateName: { fontSize: 16, fontFamily: fontFamily.medium, color: colors.text.heading },
+  templateDetails: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.text.body, marginTop: 2 },
   actions: { flexDirection: 'row', gap: 16 },
   systemBadge: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.primary[50],
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: borderRadius.sm,
   },
-  systemBadgeText: { fontSize: 12, color: '#6b7280' },
+  systemBadgeText: { fontSize: 12, fontFamily: fontFamily.regular, color: colors.text.body },
   emptyContainer: { alignItems: 'center', paddingVertical: 48 },
-  emptyText: { fontSize: 16, color: '#6b7280' },
+  emptyText: { fontSize: 16, fontFamily: fontFamily.regular, color: colors.text.body },
   fab: {
     position: 'absolute',
     right: 16,
     bottom: 16,
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563eb',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.primary.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
+    ...shadows.lg,
   },
-  modal: { flex: 1, backgroundColor: 'white' },
+  modal: { flex: 1, backgroundColor: colors.surface },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: colors.border,
   },
-  modalCancel: { fontSize: 16, color: '#6b7280' },
-  modalTitle: { fontSize: 18, fontWeight: '600' },
-  modalSave: { fontSize: 16, color: '#2563eb', fontWeight: '600' },
+  modalCancel: { fontSize: 16, fontFamily: fontFamily.regular, color: colors.text.body },
+  modalTitle: { fontSize: 18, fontFamily: fontFamily.semibold, color: colors.text.heading },
+  modalSave: { fontSize: 16, fontFamily: fontFamily.semibold, color: colors.primary.DEFAULT },
   modalContent: { padding: 16 },
-  label: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8, marginTop: 16 },
+  label: { fontSize: 14, fontFamily: fontFamily.medium, color: colors.text.heading, marginBottom: 8, marginTop: 16 },
   input: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: borderRadius.md,
     fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
   row: { flexDirection: 'row', gap: 12 },
   halfInput: { flex: 1 },
@@ -269,10 +273,10 @@ const styles = StyleSheet.create({
   sourceButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#f3f4f6',
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary[50],
   },
-  sourceButtonActive: { backgroundColor: '#dbeafe' },
-  sourceButtonText: { fontSize: 13, color: '#6b7280' },
-  sourceButtonTextActive: { color: '#2563eb', fontWeight: '600' },
+  sourceButtonActive: { backgroundColor: colors.primary[100] },
+  sourceButtonText: { fontSize: 13, fontFamily: fontFamily.regular, color: colors.text.body },
+  sourceButtonTextActive: { color: colors.primary.DEFAULT, fontFamily: fontFamily.semibold },
 })

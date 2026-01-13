@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-nati
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../../lib/trpc'
 import { SUBSCRIPTION_LIMITS } from '@majsterio/shared'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 const PLANS = [
   {
@@ -15,7 +16,7 @@ const PLANS = [
       'Historia 30 dni',
       'Branding "Majsterio"',
     ],
-    color: '#6b7280',
+    color: colors.text.body,
   },
   {
     tier: 'pro',
@@ -29,7 +30,7 @@ const PLANS = [
       'Bez brandingu',
       'Priorytetowe wsparcie',
     ],
-    color: '#2563eb',
+    color: colors.primary.DEFAULT,
     recommended: true,
   },
   {
@@ -43,7 +44,7 @@ const PLANS = [
       'AI sugestie cen',
       'Automatyczne opisy',
     ],
-    color: '#7c3aed',
+    color: colors.accent.DEFAULT,
     comingSoon: true,
   },
 ]
@@ -93,7 +94,7 @@ export default function SubscriptionScreen() {
         </View>
         {currentTier === 'free' && (subscription?.quotesThisMonth ?? 0) >= 8 && (
           <View style={styles.warningBanner}>
-            <Ionicons name="warning" size={20} color="#92400e" />
+            <Ionicons name="warning" size={20} color={colors.warning[700]} />
             <Text style={styles.warningText}>
               Zostało Ci {10 - (subscription?.quotesThisMonth || 0)} wycen w tym miesiącu
             </Text>
@@ -163,7 +164,7 @@ export default function SubscriptionScreen() {
 
       {/* Info */}
       <View style={styles.infoCard}>
-        <Ionicons name="information-circle-outline" size={24} color="#6b7280" />
+        <Ionicons name="information-circle-outline" size={24} color={colors.text.body} />
         <Text style={styles.infoText}>
           Subskrypcję możesz anulować w dowolnym momencie. Płatności są obsługiwane
           przez App Store / Google Play.
@@ -174,119 +175,122 @@ export default function SubscriptionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: colors.background },
   statusCard: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary.DEFAULT,
     padding: 24,
     margin: 16,
-    borderRadius: 16,
+    borderRadius: borderRadius.xl,
+    ...shadows.md,
   },
-  statusLabel: { fontSize: 14, color: '#bfdbfe' },
+  statusLabel: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.primary[200] },
   statusTier: {
     fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
+    fontFamily: fontFamily.bold,
+    color: colors.white,
     marginTop: 4,
   },
   usageContainer: {
     flexDirection: 'row',
     marginTop: 20,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     padding: 16,
   },
   usageItem: { flex: 1, alignItems: 'center' },
   usageDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.3)' },
-  usageValue: { fontSize: 24, fontWeight: '700', color: 'white' },
-  usageLabel: { fontSize: 12, color: '#bfdbfe', marginTop: 4 },
+  usageValue: { fontSize: 24, fontFamily: fontFamily.bold, color: colors.white },
+  usageLabel: { fontSize: 12, fontFamily: fontFamily.regular, color: colors.primary[200], marginTop: 4 },
   warningBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.warning[50],
     padding: 12,
-    borderRadius: 8,
+    borderRadius: borderRadius.md,
     marginTop: 16,
     gap: 8,
   },
-  warningText: { fontSize: 14, color: '#92400e', flex: 1 },
+  warningText: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.warning[700], flex: 1 },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
     marginHorizontal: 16,
     marginTop: 8,
     marginBottom: 12,
   },
   planCard: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 20,
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 16,
+    borderRadius: borderRadius.xl,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: colors.transparent,
+    ...shadows.sm,
   },
   planCardActive: {
-    borderColor: '#2563eb',
+    borderColor: colors.primary.DEFAULT,
   },
   planCardRecommended: {
-    borderColor: '#2563eb',
+    borderColor: colors.primary.DEFAULT,
   },
   recommendedBadge: {
     position: 'absolute',
     top: -10,
     right: 16,
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary.DEFAULT,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
   },
-  recommendedText: { fontSize: 12, fontWeight: '600', color: 'white' },
+  recommendedText: { fontSize: 12, fontFamily: fontFamily.semibold, color: colors.white },
   comingSoonBadge: {
     position: 'absolute',
     top: -10,
     right: 16,
-    backgroundColor: '#6b7280',
+    backgroundColor: colors.text.body,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
   },
-  comingSoonText: { fontSize: 12, fontWeight: '600', color: 'white' },
+  comingSoonText: { fontSize: 12, fontFamily: fontFamily.semibold, color: colors.white },
   planHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 16,
   },
-  planName: { fontSize: 20, fontWeight: '700' },
+  planName: { fontSize: 20, fontFamily: fontFamily.bold },
   priceContainer: { alignItems: 'flex-end' },
-  planPrice: { fontSize: 24, fontWeight: '700', color: '#1f2937' },
-  planPeriod: { fontSize: 14, color: '#6b7280' },
+  planPrice: { fontSize: 24, fontFamily: fontFamily.bold, color: colors.text.heading },
+  planPeriod: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.text.body },
   featuresList: { gap: 8 },
   featureItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  featureText: { fontSize: 14, color: '#374151' },
+  featureText: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.text.heading },
   currentPlanBadge: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: colors.primary[50],
     padding: 12,
-    borderRadius: 8,
+    borderRadius: borderRadius.md,
     marginTop: 16,
     alignItems: 'center',
   },
-  currentPlanText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
+  currentPlanText: { fontSize: 14, fontFamily: fontFamily.semibold, color: colors.text.body },
   upgradeButton: {
     padding: 14,
-    borderRadius: 8,
+    borderRadius: borderRadius.lg,
     marginTop: 16,
     alignItems: 'center',
   },
-  upgradeButtonText: { fontSize: 16, fontWeight: '600', color: 'white' },
+  upgradeButtonText: { fontSize: 16, fontFamily: fontFamily.semibold, color: colors.white },
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
     margin: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
     gap: 12,
+    ...shadows.sm,
   },
-  infoText: { fontSize: 14, color: '#6b7280', flex: 1, lineHeight: 20 },
+  infoText: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.text.body, flex: 1, lineHeight: 20 },
 })

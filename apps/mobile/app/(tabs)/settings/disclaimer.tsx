@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { DEFAULT_DISCLAIMER } from '@majsterio/shared'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 export default function DisclaimerScreen() {
   // Note: In production, these would be persisted with AsyncStorage
@@ -48,7 +49,7 @@ export default function DisclaimerScreen() {
           <Switch
             value={showByDefault}
             onValueChange={setShowByDefault}
-            trackColor={{ true: '#2563eb' }}
+            trackColor={{ true: colors.primary.DEFAULT }}
           />
         </View>
       </View>
@@ -65,7 +66,7 @@ export default function DisclaimerScreen() {
           <Switch
             value={useCustom}
             onValueChange={setUseCustom}
-            trackColor={{ true: '#2563eb' }}
+            trackColor={{ true: colors.primary.DEFAULT }}
           />
         </View>
       </View>
@@ -106,12 +107,12 @@ export default function DisclaimerScreen() {
       <View style={styles.actions}>
         {useCustom && (
           <Pressable style={styles.resetButton} onPress={handleReset}>
-            <Ionicons name="refresh" size={20} color="#6b7280" />
+            <Ionicons name="refresh" size={20} color={colors.text.body} />
             <Text style={styles.resetButtonText}>Przywróć domyślny</Text>
           </Pressable>
         )}
         <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Ionicons name="checkmark" size={20} color="white" />
+          <Ionicons name="checkmark" size={20} color={colors.white} />
           <Text style={styles.saveButtonText}>Zapisz zmiany</Text>
         </Pressable>
       </View>
@@ -120,13 +121,14 @@ export default function DisclaimerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: { flex: 1, backgroundColor: colors.background },
   card: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 16,
     marginHorizontal: 16,
     marginTop: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.xl,
+    ...shadows.sm,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -134,50 +136,54 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   toggleInfo: { flex: 1, marginRight: 16 },
-  toggleTitle: { fontSize: 16, fontWeight: '500', color: '#1f2937' },
-  toggleDescription: { fontSize: 14, color: '#6b7280', marginTop: 2 },
+  toggleTitle: { fontSize: 16, fontFamily: fontFamily.medium, color: colors.text.heading },
+  toggleDescription: { fontSize: 14, fontFamily: fontFamily.regular, color: colors.text.body, marginTop: 2 },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
+    fontFamily: fontFamily.semibold,
+    color: colors.text.body,
     marginBottom: 12,
   },
   input: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: borderRadius.md,
     fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
   textArea: {
     height: 160,
     textAlignVertical: 'top',
   },
   defaultText: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: borderRadius.md,
   },
   defaultTextContent: {
     fontSize: 14,
-    color: '#6b7280',
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
     lineHeight: 20,
   },
   preview: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: colors.warning[50],
     padding: 16,
-    borderRadius: 8,
+    borderRadius: borderRadius.md,
   },
   previewTitle: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#92400e',
+    fontFamily: fontFamily.semibold,
+    color: colors.warning[700],
     marginBottom: 8,
   },
   previewText: {
     fontSize: 12,
-    color: '#92400e',
+    fontFamily: fontFamily.regular,
+    color: colors.warning[700],
     lineHeight: 18,
   },
   actions: {
@@ -189,20 +195,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     gap: 8,
   },
-  resetButtonText: { fontSize: 16, color: '#6b7280' },
+  resetButtonText: { fontSize: 16, fontFamily: fontFamily.regular, color: colors.text.body },
   saveButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary.DEFAULT,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     gap: 8,
   },
-  saveButtonText: { fontSize: 16, fontWeight: '600', color: 'white' },
+  saveButtonText: { fontSize: 16, fontFamily: fontFamily.semibold, color: colors.white },
 })
