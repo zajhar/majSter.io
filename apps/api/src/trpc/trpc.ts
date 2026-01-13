@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server'
-import type { Context } from './context'
+import type { Context } from './context.js'
+import { getSubscriptionStatus } from '../lib/subscription.js'
 
 const t = initTRPC.context<Context>().create()
 
@@ -16,4 +17,17 @@ export const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
       user: ctx.user,
     },
   })
+})
+
+export const paidProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const { canCreateQuote, quotesRemaining } = await getSubscriptionStatus(ctx.user.id)
+
+  if (!canCreateQuote) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `Przekroczono limit wycen. Pozostało: ${quotesRemaining}. Przejdź na Pro!`,
+    })
+  }
+
+  return next({ ctx })
 })
