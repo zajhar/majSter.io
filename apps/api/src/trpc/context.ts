@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify'
 import { fromNodeHeaders } from 'better-auth/node'
-import { db } from '../db/index.js'
+import { getDb } from '../db/index.js'
 import { auth } from '../lib/auth.js'
 
 export interface User {
@@ -12,7 +12,7 @@ export interface User {
 export interface Context {
   req: FastifyRequest
   res: FastifyReply
-  db: typeof db
+  db: ReturnType<typeof getDb>
   user: User | null
 }
 
@@ -38,7 +38,7 @@ export async function createContext({ req, res }: { req: FastifyRequest; res: Fa
   return {
     req,
     res,
-    db,
+    db: getDb(),
     user,
   }
 }
