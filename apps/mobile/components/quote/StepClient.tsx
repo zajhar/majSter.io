@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../lib/trpc'
 import { useQuoteStore } from '../../stores/quoteStore'
+import type { Client } from '@majsterio/shared'
 
 interface Props {
   onNext: () => void
@@ -13,7 +14,7 @@ export function StepClient({ onNext }: Props) {
   const { data: clients } = trpc.clients.list.useQuery()
   const { draft, setClientId } = useQuoteStore()
 
-  const filteredClients = clients?.filter((c) => {
+  const filteredClients = clients?.filter((c: Client) => {
     const name = `${c.firstName} ${c.lastName}`.toLowerCase()
     return name.includes(search.toLowerCase())
   }) ?? []
@@ -23,7 +24,7 @@ export function StepClient({ onNext }: Props) {
     onNext()
   }
 
-  const selectedClient = clients?.find((c) => c.id === draft.clientId)
+  const selectedClient = clients?.find((c: Client) => c.id === draft.clientId)
 
   return (
     <View style={styles.container}>

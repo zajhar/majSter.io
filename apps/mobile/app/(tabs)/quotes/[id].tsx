@@ -4,6 +4,7 @@ import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../../lib/trpc'
 import { generateQuotePdf, shareQuotePdf } from '../../../services/pdf'
+import type { Client } from '@majsterio/shared'
 
 export default function QuoteDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -35,7 +36,7 @@ export default function QuoteDetailScreen() {
 
     setIsSharing(true)
     try {
-      const client = clients?.find((c) => c.id === quote.clientId)
+      const client = clients?.find((c: Client) => c.id === quote.clientId)
       if (!client) {
         Alert.alert('Błąd', 'Nie znaleziono klienta')
         return

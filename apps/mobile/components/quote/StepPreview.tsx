@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
 import { trpc } from '../../lib/trpc'
 import { DEFAULT_DISCLAIMER } from '@majsterio/shared'
+import type { Client } from '@majsterio/shared'
 
 interface Props {
   onSubmit: () => void
@@ -18,7 +19,7 @@ export function StepPreview({ onSubmit, isLoading }: Props) {
   const [notesAfter, setNotesAfter] = useState(draft.notesAfter)
   const [showDisclaimer, setShowDisclaimer] = useState(draft.showDisclaimer)
 
-  const client = clients?.find((c) => c.id === draft.clientId)
+  const client = clients?.find((c: Client) => c.id === draft.clientId)
   const total = getTotal()
 
   const handleSubmit = () => {

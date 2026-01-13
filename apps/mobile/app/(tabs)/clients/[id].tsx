@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../../lib/trpc'
+import type { Quote } from '@majsterio/shared'
 
 export default function ClientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -32,7 +33,7 @@ export default function ClientDetailScreen() {
       utils.clients.byId.invalidate({ id: id! })
       setIsEditing(false)
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       Alert.alert('Błąd', error.message)
     },
   })
@@ -42,7 +43,7 @@ export default function ClientDetailScreen() {
       utils.clients.list.invalidate()
       router.back()
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       Alert.alert('Błąd', error.message)
     },
   })
@@ -97,7 +98,7 @@ export default function ClientDetailScreen() {
     }
   }
 
-  const clientQuotes = quotes?.filter((q) => q.clientId === id) ?? []
+  const clientQuotes = quotes?.filter((q: Quote) => q.clientId === id) ?? []
 
   if (isLoading || !client) {
     return (
@@ -233,7 +234,7 @@ export default function ClientDetailScreen() {
         {clientQuotes.length === 0 ? (
           <Text style={styles.emptyText}>Brak wycen dla tego klienta</Text>
         ) : (
-          clientQuotes.slice(0, 5).map((quote) => (
+          clientQuotes.slice(0, 5).map((quote: Quote) => (
             <Pressable
               key={quote.id}
               style={styles.quoteRow}

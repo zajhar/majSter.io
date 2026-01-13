@@ -26,7 +26,7 @@ export default function CreateClientScreen() {
       utils.clients.list.invalidate()
       router.back()
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       Alert.alert('Błąd', error.message)
     },
   })
