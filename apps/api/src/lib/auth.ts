@@ -1,6 +1,6 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { getDb } from '../db'
+import { getDb } from '../db/index.js'
 
 let _auth: ReturnType<typeof betterAuth> | null = null
 
