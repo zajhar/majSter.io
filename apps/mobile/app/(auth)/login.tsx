@@ -13,6 +13,8 @@ import {
 import { Link, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../stores/authStore'
+import { clearLocalDatabase } from '../../db'
+import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -24,7 +26,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Błąd', 'Wypełnij wszystkie pola')
+      Alert.alert('Blad', 'Wypelnij wszystkie pola')
       return
     }
 
@@ -33,21 +35,30 @@ export default function LoginScreen() {
     try {
       const response = await fetch(`${API_URL}/api/auth/sign-in/email`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': 'exp://localhost',
+        },
         body: JSON.stringify({ email, password }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Błąd logowania')
+        throw new Error(data.message || 'Blad logowania')
+      }
+
+      // Wyczysc lokalne dane jesli loguje sie inny uzytkownik
+      const previousUserId = useAuthStore.getState().user?.id
+      if (previousUserId && previousUserId !== data.user.id) {
+        await clearLocalDatabase()
       }
 
       setUser(data.user)
       setToken(data.token)
       router.replace('/(tabs)')
     } catch (error) {
-      Alert.alert('Błąd', error instanceof Error ? error.message : 'Błąd logowania')
+      Alert.alert('Blad', error instanceof Error ? error.message : 'Blad logowania')
     } finally {
       setIsLoading(false)
     }
@@ -66,8 +77,13 @@ export default function LoginScreen() {
       <View style={styles.content}>
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <Ionicons name="construct" size={64} color="#2563eb" />
-          <Text style={styles.logoText}>Majsterio</Text>
+          <View style={styles.logoIcon}>
+            <Text style={styles.logoF}>F</Text>
+          </View>
+          <View style={styles.logoTextContainer}>
+            <Text style={styles.logoOd}>Od</Text>
+            <Text style={styles.logoFachowca}>Fachowca</Text>
+          </View>
           <Text style={styles.tagline}>Profesjonalne wyceny w 60 sekund</Text>
         </View>
 
@@ -88,6 +104,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
+          placeholderTextColor={colors.text.muted}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -96,7 +113,8 @@ export default function LoginScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Hasło"
+          placeholder="Haslo"
+          placeholderTextColor={colors.text.muted}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -110,7 +128,7 @@ export default function LoginScreen() {
           {isLoading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.loginButtonText}>Zaloguj się</Text>
+            <Text style={styles.loginButtonText}>Zaloguj sie</Text>
           )}
         </Pressable>
 
@@ -119,7 +137,7 @@ export default function LoginScreen() {
           <Text style={styles.registerText}>Nie masz konta? </Text>
           <Link href="/(auth)/register" asChild>
             <Pressable>
-              <Text style={styles.registerLink}>Zarejestruj się</Text>
+              <Text style={styles.registerLink}>Zarejestruj sie</Text>
             </Pressable>
           </Link>
         </View>
@@ -131,7 +149,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -142,32 +160,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 48,
   },
-  logoText: {
+  logoIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: colors.primary.DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  logoF: {
+    fontFamily: fontFamily.bold,
+    fontSize: 40,
+    color: colors.white,
+  },
+  logoTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  logoOd: {
+    fontFamily: fontFamily.bold,
     fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginTop: 12,
+    color: colors.accent.DEFAULT,
+  },
+  logoFachowca: {
+    fontFamily: fontFamily.bold,
+    fontSize: 32,
+    color: colors.text.heading,
   },
   tagline: {
+    fontFamily: fontFamily.regular,
     fontSize: 16,
-    color: '#6b7280',
+    color: colors.text.body,
     marginTop: 8,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     gap: 12,
   },
   googleButtonText: {
+    fontFamily: fontFamily.medium,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
+    color: colors.text.heading,
   },
   divider: {
     flexDirection: 'row',
@@ -177,25 +218,28 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: colors.border,
   },
   dividerText: {
+    fontFamily: fontFamily.regular,
     marginHorizontal: 16,
-    color: '#6b7280',
+    color: colors.text.muted,
   },
   input: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
+    fontFamily: fontFamily.regular,
     fontSize: 16,
+    color: colors.text.heading,
     marginBottom: 12,
   },
   loginButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accent.DEFAULT,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     marginTop: 8,
   },
@@ -203,9 +247,9 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   loginButtonText: {
-    color: 'white',
+    color: colors.white,
+    fontFamily: fontFamily.semibold,
     fontSize: 18,
-    fontWeight: '600',
   },
   registerContainer: {
     flexDirection: 'row',
@@ -213,10 +257,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   registerText: {
-    color: '#6b7280',
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
   },
   registerLink: {
-    color: '#2563eb',
-    fontWeight: '500',
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
   },
 })
