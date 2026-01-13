@@ -1,12 +1,30 @@
-import { Tabs } from 'expo-router'
+import { Tabs, Redirect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
+import { useAuthStore } from '../../stores/authStore'
+import { colors } from '../../constants/theme'
 
 export default function TabLayout() {
+  const { isAuthenticated, isLoading } = useAuthStore()
+
+  if (isLoading) return null
+  if (!isAuthenticated) return <Redirect href="/(auth)/login" />
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#2563eb',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: colors.primary.DEFAULT,
+        tabBarInactiveTintColor: colors.text.muted,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
+        headerStyle: {
+          backgroundColor: colors.surface,
+        },
+        headerTintColor: colors.text.heading,
+        headerTitleStyle: {
+          fontFamily: 'Nunito-SemiBold',
+        },
         headerShown: true,
       }}
     >
