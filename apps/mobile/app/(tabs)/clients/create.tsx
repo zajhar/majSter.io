@@ -11,7 +11,9 @@ import {
   Platform,
 } from 'react-native'
 import { router } from 'expo-router'
-import { trpc } from '../../../lib/trpc'
+import { useCreateClient } from '../../../hooks/useOfflineClients'
+import { useSyncStore } from '../../../stores/syncStore'
+import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 export default function CreateClientScreen() {
   const [firstName, setFirstName] = useState('')
@@ -19,31 +21,32 @@ export default function CreateClientScreen() {
   const [phone, setPhone] = useState('')
   const [siteAddress, setSiteAddress] = useState('')
   const [notes, setNotes] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
-  const utils = trpc.useUtils()
-  const createClient = trpc.clients.create.useMutation({
-    onSuccess: () => {
-      utils.clients.list.invalidate()
-      router.back()
-    },
-    onError: (error) => {
-      Alert.alert('Błąd', error.message)
-    },
-  })
+  const { create } = useCreateClient()
+  const isOnline = useSyncStore((s) => s.isOnline)
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!firstName || !lastName) {
       Alert.alert('Błąd', 'Imię i nazwisko są wymagane')
       return
     }
 
-    createClient.mutate({
+    setIsSaving(true)
+    const result = await create({
       firstName,
       lastName,
       phone: phone || undefined,
       siteAddress: siteAddress || undefined,
       notes: notes || undefined,
     })
+    setIsSaving(false)
+
+    if (result.success) {
+      router.back()
+    } else {
+      Alert.alert('Błąd', result.error || 'Nie udało się dodać klienta')
+    }
   }
 
   return (
@@ -97,12 +100,12 @@ export default function CreateClientScreen() {
           />
 
           <Pressable
-            style={[styles.button, createClient.isPending && styles.buttonDisabled]}
+            style={[styles.button, isSaving && styles.buttonDisabled]}
             onPress={handleCreate}
-            disabled={createClient.isPending}
+            disabled={isSaving}
           >
             <Text style={styles.buttonText}>
-              {createClient.isPending ? 'Zapisywanie...' : 'Dodaj klienta'}
+              {isSaving ? 'Zapisywanie...' : 'Dodaj klienta'}
             </Text>
           </Pressable>
         </View>
@@ -114,7 +117,7 @@ export default function CreateClientScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -124,36 +127,39 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: colors.border,
     padding: 14,
-    borderRadius: 10,
+    borderRadius: borderRadius.md,
     fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
   button: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.accent.DEFAULT,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     marginTop: 24,
+    ...shadows.md,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    color: 'white',
+    color: colors.white,
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: fontFamily.semibold,
   },
 })
