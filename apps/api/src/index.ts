@@ -29,11 +29,33 @@ await fastify.register(cors, {
   origin: true,
 })
 
-// Better Auth handler
+// Better Auth handler - converts Fastify request to Web API Request
 fastify.all('/api/auth/*', async (req, reply) => {
-  const response = await auth.handler(req.raw)
+  // Construct full URL
+  const protocol = req.protocol || 'http'
+  const host = req.headers.host || 'localhost'
+  const url = new URL(req.url, `${protocol}://${host}`)
 
-  // Copy headers
+  // Convert headers to Web API Headers
+  const headers = new Headers()
+  Object.entries(req.headers).forEach(([key, value]) => {
+    if (value !== undefined) {
+      headers.append(key, Array.isArray(value) ? value.join(', ') : value)
+    }
+  })
+
+  // Create Web API Request
+  const webRequest = new Request(url.toString(), {
+    method: req.method,
+    headers,
+    body: req.method !== 'GET' && req.method !== 'HEAD' && req.body
+      ? JSON.stringify(req.body)
+      : undefined,
+  })
+
+  const response = await auth.handler(webRequest)
+
+  // Copy response headers
   response.headers.forEach((value, key) => {
     reply.header(key, value)
   })
