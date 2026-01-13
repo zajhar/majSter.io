@@ -30,7 +30,7 @@ export default function QuoteCreateScreen() {
       reset()
       router.replace('/(tabs)/quotes')
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       Alert.alert('Błąd', error.message)
     },
   })

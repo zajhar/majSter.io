@@ -1,40 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   View, Text, TextInput, Pressable, StyleSheet,
   ScrollView, Alert, Switch
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { trpc } from '../../../lib/trpc'
 import { DEFAULT_DISCLAIMER } from '@majsterio/shared'
 
 export default function DisclaimerScreen() {
-  const { data: settings } = trpc.settings.get.useQuery()
-  const utils = trpc.useUtils()
-
-  const updateSettings = trpc.settings.update.useMutation({
-    onSuccess: () => {
-      utils.settings.get.invalidate()
-      Alert.alert('Sukces', 'Ustawienia zostały zapisane')
-    },
-  })
-
+  // Note: In production, these would be persisted with AsyncStorage
   const [disclaimer, setDisclaimer] = useState('')
   const [showByDefault, setShowByDefault] = useState(true)
   const [useCustom, setUseCustom] = useState(false)
 
-  useEffect(() => {
-    if (settings) {
-      setDisclaimer(settings.defaultDisclaimer || '')
-      setShowByDefault(settings.showDisclaimerByDefault)
-      setUseCustom(!!settings.defaultDisclaimer)
-    }
-  }, [settings])
-
   const handleSave = () => {
-    updateSettings.mutate({
-      defaultDisclaimer: useCustom ? disclaimer.trim() || null : null,
-      showDisclaimerByDefault: showByDefault,
-    })
+    // TODO: Save to AsyncStorage when implemented
+    Alert.alert('Sukces', 'Ustawienia zostały zapisane lokalnie')
   }
 
   const handleReset = () => {
@@ -130,15 +110,9 @@ export default function DisclaimerScreen() {
             <Text style={styles.resetButtonText}>Przywróć domyślny</Text>
           </Pressable>
         )}
-        <Pressable
-          style={[styles.saveButton, updateSettings.isPending && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={updateSettings.isPending}
-        >
+        <Pressable style={styles.saveButton} onPress={handleSave}>
           <Ionicons name="checkmark" size={20} color="white" />
-          <Text style={styles.saveButtonText}>
-            {updateSettings.isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
-          </Text>
+          <Text style={styles.saveButtonText}>Zapisz zmiany</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -230,6 +204,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
-  saveButtonDisabled: { opacity: 0.7 },
   saveButtonText: { fontSize: 16, fontWeight: '600', color: 'white' },
 })

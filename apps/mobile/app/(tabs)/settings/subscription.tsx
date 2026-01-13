@@ -49,7 +49,7 @@ const PLANS = [
 ]
 
 export default function SubscriptionScreen() {
-  const { data: subscription, isLoading } = trpc.subscriptions.status.useQuery()
+  const { data: subscription } = trpc.subscriptions.status.useQuery()
 
   const handleUpgrade = (tier: string) => {
     if (tier === 'pro_ai') {

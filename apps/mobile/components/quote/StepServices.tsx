@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  View, Text, FlatList, Pressable, StyleSheet,
+  View, Text, Pressable, StyleSheet,
   TextInput, Modal, ScrollView
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'

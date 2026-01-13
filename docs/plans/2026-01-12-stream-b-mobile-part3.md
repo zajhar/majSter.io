@@ -1,3 +1,30 @@
+# Stream B: Mobile Part 3 (Remaining Items) - Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Dokończenie aplikacji mobilnej - brakujący ekran szczegółów klienta oraz końcowe testy i poprawki.
+
+**Architecture:** Kontynuacja Stream B. Client detail screen z możliwością edycji i usunięcia klienta.
+
+**Tech Stack:** Expo, React Native, expo-router, tRPC, Zustand
+
+**Branch:** `feat/mobile-foundation`
+
+**Prerequisites:** Stream B Part 1 i Part 2 ukończone
+
+---
+
+## B9: Client Details Screen
+
+### Task B9.1: Create client details screen
+
+**Files:**
+- Create: `apps/mobile/app/(tabs)/clients/[id].tsx`
+
+**Step 1: Utwórz clients/[id].tsx**
+
+Create `apps/mobile/app/(tabs)/clients/[id].tsx`:
+```typescript
 import { useState } from 'react'
 import {
   View,
@@ -323,6 +350,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   deleteText: { fontSize: 16, color: '#dc2626', fontWeight: '500' },
+  // Edit mode styles
   editHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -354,3 +382,124 @@ const styles = StyleSheet.create({
   },
   textArea: { height: 100, textAlignVertical: 'top' },
 })
+```
+
+**Step 2: Verify the build compiles**
+
+Run: `cd apps/mobile && npx tsc --noEmit`
+Expected: No type errors
+
+**Step 3: Commit**
+
+```bash
+git add apps/mobile/app/\(tabs\)/clients/\[id\].tsx
+git commit -m "feat(mobile): add client detail screen with edit and delete"
+```
+
+---
+
+## B10: Verify and Test Build
+
+### Task B10.1: Type check the entire mobile app
+
+**Step 1: Run TypeScript check**
+
+Run: `cd apps/mobile && pnpm check-types`
+Expected: PASS with no errors
+
+**Step 2: If errors, fix them**
+
+Fix any TypeScript errors that appear.
+
+**Step 3: Commit fixes if any**
+
+```bash
+git add -A
+git commit -m "fix(mobile): resolve TypeScript errors"
+```
+
+---
+
+### Task B10.2: Verify all screens load
+
+**Step 1: Start Expo dev server**
+
+Run: `cd apps/mobile && pnpm start`
+
+**Step 2: Test navigation**
+
+Test in simulator/device:
+- [ ] Auth screens (login, register)
+- [ ] Dashboard tab
+- [ ] Quotes tab (list, detail, PDF share)
+- [ ] Quote creator (all 5 steps)
+- [ ] Clients tab (list, detail, create)
+- [ ] Settings tab (all sub-screens)
+- [ ] Offline indicator (toggle airplane mode)
+
+**Step 3: Document any issues**
+
+If issues found, create follow-up tasks.
+
+---
+
+## B11: Final Cleanup
+
+### Task B11.1: Remove unused imports and code
+
+**Step 1: Run linter**
+
+Run: `cd apps/mobile && pnpm lint --fix`
+
+**Step 2: Commit cleanup**
+
+```bash
+git add -A
+git commit -m "chore(mobile): lint and cleanup"
+```
+
+---
+
+### Task B11.2: Update package.json scripts if needed
+
+**Step 1: Verify scripts exist**
+
+Check `apps/mobile/package.json` has:
+- `start`
+- `ios`
+- `android`
+- `lint`
+- `check-types`
+
+**Step 2: Add missing scripts if needed**
+
+---
+
+## Summary
+
+Plan Stream B Part 3 zawiera:
+
+- **B9**: Client details screen (view, edit, delete) ✅
+- **B10**: Type checking and verification ✅
+- **B11**: Cleanup and polish ✅
+
+**After completing this plan:**
+
+The mobile app (Stream B) will be complete with:
+- Full auth flow (login/register)
+- Client management (list, create, view, edit, delete)
+- Quote management (list, create with 5-step wizard, view, delete, PDF share)
+- Settings (profile, service templates, material templates, disclaimer, subscription)
+- Offline mode (SQLite cache, sync queue, network indicator)
+
+---
+
+**Execution Options:**
+
+Plan complete and saved to `docs/plans/2026-01-12-stream-b-mobile-part3.md`. Two execution options:
+
+**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+
+**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+
+**Which approach?**

@@ -25,11 +25,19 @@ export const templatesRouter = router({
         data: createServiceTemplateSchema,
       }))
       .mutation(async ({ ctx, input }) => {
+        const setData = {
+          name: input.data.name,
+          unit: input.data.unit,
+          quantitySource: input.data.quantitySource,
+          defaultPrice: input.data.defaultPrice?.toString(),
+          category: input.data.category,
+        }
+
         if (input.id) {
           // Update
           const [template] = await ctx.db
             .update(serviceTemplates)
-            .set(input.data)
+            .set(setData)
             .where(and(
               eq(serviceTemplates.id, input.id),
               eq(serviceTemplates.userId, ctx.user.id)
@@ -42,7 +50,7 @@ export const templatesRouter = router({
             .insert(serviceTemplates)
             .values({
               userId: ctx.user.id,
-              ...input.data,
+              ...setData,
             })
             .returning()
           return template
@@ -86,13 +94,18 @@ export const templatesRouter = router({
           ? JSON.stringify(input.data.linkedServiceIds)
           : null
 
+        const setData = {
+          name: input.data.name,
+          unit: input.data.unit,
+          defaultPrice: input.data.defaultPrice?.toString(),
+          consumption: input.data.consumption?.toString(),
+          linkedServiceIds,
+        }
+
         if (input.id) {
           const [template] = await ctx.db
             .update(materialTemplates)
-            .set({
-              ...input.data,
-              linkedServiceIds,
-            })
+            .set(setData)
             .where(and(
               eq(materialTemplates.id, input.id),
               eq(materialTemplates.userId, ctx.user.id)
@@ -104,8 +117,7 @@ export const templatesRouter = router({
             .insert(materialTemplates)
             .values({
               userId: ctx.user.id,
-              ...input.data,
-              linkedServiceIds,
+              ...setData,
             })
             .returning()
           return template

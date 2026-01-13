@@ -3,13 +3,12 @@ import { Link } from 'expo-router'
 import { useState } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../../lib/trpc'
-import type { Client } from '@majsterio/shared'
 
 export default function ClientsListScreen() {
   const [search, setSearch] = useState('')
   const { data: clients, isLoading } = trpc.clients.list.useQuery()
 
-  const filteredClients = clients?.filter((client: Client) => {
+  const filteredClients = clients?.filter((client) => {
     const fullName = `${client.firstName} ${client.lastName}`.toLowerCase()
     return fullName.includes(search.toLowerCase())
   }) ?? []

@@ -2,7 +2,6 @@ import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { trpc } from '../../lib/trpc'
-import type { Quote } from '@majsterio/shared'
 
 export default function DashboardScreen() {
   const { data: subscription } = trpc.subscriptions.status.useQuery()
@@ -39,7 +38,7 @@ export default function DashboardScreen() {
         {recentQuotes.length === 0 ? (
           <Text style={styles.emptyText}>Brak wycen</Text>
         ) : (
-          recentQuotes.map((quote: Quote) => (
+          recentQuotes.map((quote) => (
             <Link key={quote.id} href={`/(tabs)/quotes/${quote.id}`} asChild>
               <Pressable style={styles.quoteCard}>
                 <Text style={styles.quoteNumber}>#{quote.number}</Text>

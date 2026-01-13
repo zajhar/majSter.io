@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Animated } from 'react-native'
+import { Text, StyleSheet, Animated } from 'react-native'
 import { useEffect, useRef } from 'react'
 import { Ionicons } from '@expo/vector-icons'
 import { useSyncStore } from '../../stores/syncStore'
@@ -13,7 +13,7 @@ export function OfflineIndicator() {
       duration: 300,
       useNativeDriver: true,
     }).start()
-  }, [isOnline])
+  }, [isOnline, translateY])
 
   if (isOnline && pendingCount === 0) return null
 
