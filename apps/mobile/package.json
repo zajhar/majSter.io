@@ -3,14 +3,19 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
+    "dev": "expo start --port 8082",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@majsterio/api-client": "workspace:*",
     "@majsterio/shared": "workspace:*",
@@ -44,9 +49,14 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^29.5.0",
     "@types/node": "^22.0.0",
     "@types/react": "~19.1.0",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint-config-expo": "^10.0.0",
+    "jest": "^29.7.0",
+    "jest-expo": "^54.0.16",
     "typescript": "~5.9.2"
   },
   "private": true
