@@ -57,6 +57,13 @@ export function StepClient() {
         )}
       </View>
 
+      {/* Skip hint */}
+      {!draft.clientId && (
+        <Text style={styles.skipHint}>
+          Możesz pominąć i dodać klienta później
+        </Text>
+      )}
+
       {/* List */}
       <FlatList
         data={filteredClients}
@@ -229,5 +236,13 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     color: colors.text.muted,
     marginTop: 4,
+  },
+  skipHint: {
+    textAlign: 'center',
+    fontSize: 13,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 8,
+    marginHorizontal: 16,
   },
 })

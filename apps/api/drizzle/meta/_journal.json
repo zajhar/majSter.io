@@ -8,6 +8,13 @@
       "when": 1768309144115,
       "tag": "0000_last_hitman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768408278763,
+      "tag": "0001_awesome_killraven",
+      "breakpoints": true
     }
   ]
 }

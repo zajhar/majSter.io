@@ -4,6 +4,7 @@ import { useLocalSearchParams, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useQuoteById, useDeleteQuote } from '../../../hooks/useOfflineQuotes'
 import { useClientsList } from '../../../hooks/useOfflineClients'
+import { useQuoteStore } from '../../../stores/quoteStore'
 import { useSyncError } from '../../../hooks/useSyncError'
 import { SyncErrorBanner } from '../../../components/ui/SyncErrorBanner'
 import { generateQuotePdf, shareQuotePdf } from '../../../services/pdf'
@@ -21,8 +22,15 @@ export default function QuoteDetailScreen() {
   const { data: quote, isLoading } = useQuoteById(id)
   const { data: clients } = useClientsList()
   const { deleteQuote: deleteQuoteFn } = useDeleteQuote()
+  const { initForEdit } = useQuoteStore()
   const syncError = useSyncError(id)
   const [isSharing, setIsSharing] = useState(false)
+
+  const handleEdit = () => {
+    if (!quote) return
+    initForEdit(quote)
+    router.push('/quote/create')
+  }
 
   const handleDelete = () => {
     Alert.alert('Usuń wycenę', 'Czy na pewno chcesz usunąć tę wycenę?', [
@@ -47,19 +55,17 @@ export default function QuoteDetailScreen() {
 
     setIsSharing(true)
     try {
-      const client = clients?.find((c) => c.id === quote.clientId)
-      if (!client) {
-        Alert.alert('Błąd', 'Nie znaleziono klienta')
-        return
-      }
+      const client = quote.clientId
+        ? clients?.find((c) => c.id === quote.clientId)
+        : null
 
       const pdfUri = await generateQuotePdf({
         number: quote.number,
-        client: {
+        client: client ? {
           firstName: client.firstName,
           lastName: client.lastName,
           siteAddress: client.siteAddress,
-        },
+        } : null,
         groups: quote.groups?.map((g: typeof quote.groups[number]) => ({
           name: g.name,
           services: g.services?.map((s: typeof g.services[number]) => ({
@@ -119,6 +125,14 @@ export default function QuoteDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.quoteNumber}>Wycena #{quote.number}</Text>
+        {(() => {
+          const client = quote.clientId ? clients?.find((c) => c.id === quote.clientId) : null
+          return (
+            <Text style={[styles.clientName, !client && styles.noClientText]}>
+              {client ? `${client.firstName} ${client.lastName}` : 'Bez klienta'}
+            </Text>
+          )
+        })()}
         <Text style={styles.total}>{quote.total} zl</Text>
         <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
           <Text style={[styles.statusText, { color: status.color }]}>
@@ -184,6 +198,9 @@ export default function QuoteDetailScreen() {
 
       {/* Actions */}
       <View style={styles.actions}>
+        <Pressable style={styles.editButton} onPress={handleEdit}>
+          <Ionicons name="pencil-outline" size={20} color={colors.primary.DEFAULT} />
+        </Pressable>
         <Pressable
           style={[styles.shareButton, isSharing && styles.shareButtonDisabled]}
           onPress={handleShare}
@@ -195,7 +212,7 @@ export default function QuoteDetailScreen() {
             <Ionicons name="share-outline" size={20} color="white" />
           )}
           <Text style={styles.shareButtonText}>
-            {isSharing ? 'Generowanie...' : 'Udostępnij PDF'}
+            {isSharing ? 'Generowanie...' : 'Udostępnij'}
           </Text>
         </Pressable>
         <Pressable style={styles.deleteButton} onPress={handleDelete}>
@@ -233,6 +250,16 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: 16,
     color: colors.text.body,
+  },
+  clientName: {
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+    color: colors.text.heading,
+    marginTop: 4,
+  },
+  noClientText: {
+    fontStyle: 'italic',
+    color: colors.text.muted,
   },
   total: {
     fontFamily: fontFamily.bold,
@@ -338,6 +365,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   shareButtonDisabled: { opacity: 0.7 },
+  editButton: {
+    padding: 16,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary[200],
+    backgroundColor: colors.primary[50],
+  },
   deleteButton: {
     padding: 16,
     borderRadius: borderRadius.md,

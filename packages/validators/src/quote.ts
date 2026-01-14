@@ -28,7 +28,7 @@ export const createQuoteMaterialSchema = z.object({
 })
 
 export const createQuoteSchema = z.object({
-  clientId: z.string().uuid('Nieprawidłowy ID klienta'),
+  clientId: z.string().uuid('Nieprawidłowy ID klienta').nullable().optional(),
   notesBefore: z.string().optional(),
   notesAfter: z.string().optional(),
   disclaimer: z.string().optional(),
@@ -41,3 +41,9 @@ export type CreateQuoteSchema = z.infer<typeof createQuoteSchema>
 export type CreateQuoteGroupSchema = z.infer<typeof createQuoteGroupSchema>
 export type CreateQuoteServiceSchema = z.infer<typeof createQuoteServiceSchema>
 export type CreateQuoteMaterialSchema = z.infer<typeof createQuoteMaterialSchema>
+
+export const updateQuoteSchema = createQuoteSchema.extend({
+  id: z.string().uuid('Nieprawidłowy ID wyceny'),
+})
+
+export type UpdateQuoteSchema = z.infer<typeof updateQuoteSchema>

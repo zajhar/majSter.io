@@ -4,7 +4,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
-import { useCreateQuote } from '../../hooks/useOfflineQuotes'
+import { useCreateQuote, useUpdateQuote } from '../../hooks/useOfflineQuotes'
 import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
 // Step components
@@ -24,8 +24,9 @@ const STEPS = [
 
 export default function QuoteCreateScreen() {
   const insets = useSafeAreaInsets()
-  const { draft, currentStep, setStep, reset, getTotal } = useQuoteStore()
+  const { draft, currentStep, setStep, reset, getTotal, mode, editingQuoteId } = useQuoteStore()
   const { create } = useCreateQuote()
+  const { update } = useUpdateQuote()
   const [isSaving, setIsSaving] = useState(false)
 
   const total = getTotal()
@@ -57,18 +58,15 @@ export default function QuoteCreateScreen() {
   }
 
   const handleSubmit = async () => {
-    if (!draft.clientId) {
-      Alert.alert('Błąd', 'Wybierz klienta')
-      return
-    }
     if (draft.groups.length === 0) {
       Alert.alert('Błąd', 'Dodaj co najmniej jedną grupę')
       return
     }
 
     setIsSaving(true)
-    const result = await create({
-      clientId: draft.clientId,
+
+    const quoteData = {
+      clientId: draft.clientId ?? undefined,
       notesBefore: draft.notesBefore || undefined,
       notesAfter: draft.notesAfter || undefined,
       disclaimer: draft.disclaimer || undefined,
@@ -97,14 +95,19 @@ export default function QuoteCreateScreen() {
         unit: m.unit,
         pricePerUnit: m.pricePerUnit,
       })),
-    })
+    }
+
+    const result = mode === 'edit' && editingQuoteId
+      ? await update({ id: editingQuoteId, ...quoteData })
+      : await create(quoteData)
+
     setIsSaving(false)
 
     if (result.success) {
       reset()
       router.replace('/(tabs)/quotes')
     } else {
-      Alert.alert('Błąd', result.error || 'Nie udało się utworzyć wyceny')
+      Alert.alert('Błąd', result.error || 'Nie udało się zapisać wyceny')
     }
   }
 
@@ -121,7 +124,7 @@ export default function QuoteCreateScreen() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 0: return !!draft.clientId
+      case 0: return true // Client is optional
       case 1: return draft.groups.length > 0
       case 2: return draft.groups.some(g => g.services.length > 0)
       case 3: return true // Materials are optional
@@ -138,7 +141,9 @@ export default function QuoteCreateScreen() {
           <Pressable onPress={handleCancel} hitSlop={8}>
             <Ionicons name="close" size={24} color={colors.text.heading} />
           </Pressable>
-          <Text style={styles.headerTitle}>Nowa wycena</Text>
+          <Text style={styles.headerTitle}>
+            {mode === 'edit' ? 'Edytuj wycenę' : 'Nowa wycena'}
+          </Text>
           <Pressable onPress={handleSaveDraft} hitSlop={8}>
             <Text style={styles.saveButton}>Zapisz</Text>
           </Pressable>

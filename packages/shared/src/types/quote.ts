@@ -51,7 +51,7 @@ export interface QuoteMaterial {
 export interface Quote {
   id: string
   userId: string
-  clientId: string
+  clientId: string | null
   number: number
   status: QuoteStatus
   notesBefore: string | null
@@ -68,7 +68,7 @@ export interface Quote {
 }
 
 export interface CreateQuoteInput {
-  clientId: string
+  clientId?: string | null
   notesBefore?: string
   notesAfter?: string
   disclaimer?: string
@@ -104,4 +104,8 @@ export interface CreateQuoteMaterialInput {
   quantity: number
   unit: string
   pricePerUnit: number
+}
+
+export interface UpdateQuoteInput extends CreateQuoteInput {
+  id: string
 }

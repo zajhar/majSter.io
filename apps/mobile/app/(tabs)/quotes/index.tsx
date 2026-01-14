@@ -2,6 +2,7 @@ import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native'
 import { Link } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useQuotesList } from '../../../hooks/useOfflineQuotes'
+import { useClientsList } from '../../../hooks/useOfflineClients'
 import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 const STATUS_CONFIG = {
@@ -13,6 +14,7 @@ const STATUS_CONFIG = {
 
 export default function QuotesListScreen() {
   const { data: quotes, isLoading } = useQuotesList()
+  const { data: clients } = useClientsList()
 
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('pl-PL', {
@@ -28,6 +30,10 @@ export default function QuotesListScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const status = STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]
+          const client = item.clientId ? clients?.find((c) => c.id === item.clientId) : null
+          const clientName = client
+            ? `${client.firstName} ${client.lastName}`
+            : 'Bez klienta'
           return (
             <Link href={`/(tabs)/quotes/${item.id}`} asChild>
               <Pressable style={[styles.quoteCard, { borderLeftColor: status.borderColor }]}>
@@ -39,6 +45,9 @@ export default function QuotesListScreen() {
                     </Text>
                   </View>
                 </View>
+                <Text style={[styles.clientName, !client && styles.noClient]}>
+                  {clientName}
+                </Text>
                 <Text style={styles.quoteDate}>{formatDate(item.createdAt)}</Text>
                 <View style={styles.quoteFooter}>
                   <Text style={styles.quoteTotal}>{item.total} zł</Text>
@@ -97,6 +106,16 @@ const styles = StyleSheet.create({
   statusText: {
     fontFamily: fontFamily.medium,
     fontSize: 12,
+  },
+  clientName: {
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+    color: colors.text.heading,
+    marginTop: 6,
+  },
+  noClient: {
+    fontStyle: 'italic',
+    color: colors.text.muted,
   },
   quoteDate: {
     fontFamily: fontFamily.regular,
