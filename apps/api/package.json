@@ -16,7 +16,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "job:reset-quotas": "tsx src/jobs/resetQuotas.ts",
-    "seed:services": "tsx src/scripts/seedSystemServices.ts"
+    "seed:services": "tsx src/scripts/seedSystemServices.ts",
+    "seed:group-templates": "tsx src/scripts/seedGroupTemplates.ts"
   },
   "dependencies": {
     "@fastify/compress": "^8.3.1",
