@@ -11,11 +11,59 @@ import {
   index,
 } from 'drizzle-orm/pg-core'
 
+// ========== BETTER AUTH TABLES ==========
+
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('email_verified').default(false).notNull(),
+  image: text('image'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const session = pgTable('session', {
+  id: text('id').primaryKey(),
+  expiresAt: timestamp('expires_at').notNull(),
+  token: text('token').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+})
+
+export const account = pgTable('account', {
+  id: text('id').primaryKey(),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at'),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
+export const verification = pgTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
 // ========== CLIENTS ==========
 
 export const clients = pgTable('clients', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   firstName: varchar('first_name', { length: 100 }).notNull(),
   lastName: varchar('last_name', { length: 100 }).notNull(),
   phone: varchar('phone', { length: 20 }),
@@ -31,7 +79,7 @@ export const clients = pgTable('clients', {
 
 export const quotes = pgTable('quotes', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   clientId: uuid('client_id').notNull().references(() => clients.id),
   number: serial('number'),
   status: varchar('status', { length: 20 }).default('draft').notNull(),
@@ -61,6 +109,10 @@ export const quoteGroups = pgTable('quote_groups', {
   ceilingM2: decimal('ceiling_m2', { precision: 8, scale: 2 }),
   floorM2: decimal('floor_m2', { precision: 8, scale: 2 }),
   manualM2: decimal('manual_m2', { precision: 8, scale: 2 }),
+  manualFloor: decimal('manual_floor', { precision: 8, scale: 2 }),
+  manualCeiling: decimal('manual_ceiling', { precision: 8, scale: 2 }),
+  manualWalls: decimal('manual_walls', { precision: 8, scale: 2 }),
+  manualPerimeter: decimal('manual_perimeter', { precision: 8, scale: 2 }),
   sortOrder: integer('sort_order').default(0).notNull(),
 }, (table) => [
   index('quote_groups_quote_id_idx').on(table.quoteId),
@@ -102,7 +154,7 @@ export const quoteMaterials = pgTable('quote_materials', {
 
 export const serviceTemplates = pgTable('service_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 200 }).notNull(),
   defaultPrice: decimal('default_price', { precision: 10, scale: 2 }),
   unit: varchar('unit', { length: 20 }).notNull(),
@@ -118,7 +170,7 @@ export const serviceTemplates = pgTable('service_templates', {
 
 export const materialTemplates = pgTable('material_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 200 }).notNull(),
   defaultPrice: decimal('default_price', { precision: 10, scale: 2 }),
   unit: varchar('unit', { length: 20 }).notNull(),
@@ -133,7 +185,7 @@ export const materialTemplates = pgTable('material_templates', {
 
 export const userSettings = pgTable('user_settings', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().unique(),
+  userId: text('user_id').notNull().unique().references(() => user.id, { onDelete: 'cascade' }),
   businessName: varchar('business_name', { length: 200 }),
   businessLogo: text('business_logo'),
   defaultDisclaimer: text('default_disclaimer'),
@@ -145,7 +197,7 @@ export const userSettings = pgTable('user_settings', {
 
 export const subscriptions = pgTable('subscriptions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().unique(),
+  userId: text('user_id').notNull().unique().references(() => user.id, { onDelete: 'cascade' }),
   tier: varchar('tier', { length: 20 }).default('free').notNull(),
   status: varchar('status', { length: 20 }).default('active').notNull(),
   quotesThisMonth: integer('quotes_this_month').default(0).notNull(),

@@ -28,6 +28,10 @@ export interface QuoteGroup {
   floorM2: number | null
   // Lub ręczne m²
   manualM2: number | null
+  manualFloor: number | null
+  manualCeiling: number | null
+  manualWalls: number | null
+  manualPerimeter: number | null
   sortOrder: number
   services: QuoteService[]
 }
@@ -79,6 +83,10 @@ export interface CreateQuoteGroupInput {
   width?: number
   height?: number
   manualM2?: number
+  manualFloor?: number
+  manualCeiling?: number
+  manualWalls?: number
+  manualPerimeter?: number
   services: CreateQuoteServiceInput[]
 }
 

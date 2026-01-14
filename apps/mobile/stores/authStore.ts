@@ -58,6 +58,10 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({ user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        // Po załadowaniu z storage, ustaw isLoading na false
+        state?.setLoading(false)
+      },
     }
   )
 )

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import NetInfo from '@react-native-community/netinfo'
-import { getSyncQueue, removeFromSyncQueue, incrementRetry } from '../db'
+import { getSyncQueue, removeFromSyncQueue, incrementRetry, setSyncError } from '../db'
 
 interface SyncState {
   isOnline: boolean
@@ -11,7 +11,7 @@ interface SyncState {
   setOnline: (online: boolean) => void
   setSyncing: (syncing: boolean) => void
   updatePendingCount: () => Promise<void>
-  processQueue: (apiClient: any) => Promise<void>
+  processQueue: (apiClient: any, userId?: string) => Promise<void>
 }
 
 export const useSyncStore = create<SyncState>((set, get) => ({
@@ -29,7 +29,7 @@ export const useSyncStore = create<SyncState>((set, get) => ({
     set({ pendingCount: queue.length })
   },
 
-  processQueue: async (apiClient) => {
+  processQueue: async (apiClient, _userId) => {
     const { isOnline, isSyncing } = get()
     if (!isOnline || isSyncing) return
 
@@ -65,6 +65,8 @@ export const useSyncStore = create<SyncState>((set, get) => ({
           await removeFromSyncQueue(item.id)
         } catch (error) {
           await incrementRetry(item.id)
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          await setSyncError(item.id, errorMessage)
         }
       }
 

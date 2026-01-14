@@ -97,7 +97,7 @@ export function StepServices() {
         id: template.id,
         name: template.name,
         unit: template.unit,
-        defaultPrice: template.defaultPrice,
+        defaultPrice: template.defaultPrice ? parseFloat(template.defaultPrice) : null,
         quantitySource: (template.quantitySource as QuantitySource) || 'manual',
       }]
     })

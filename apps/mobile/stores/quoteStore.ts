@@ -17,6 +17,10 @@ interface QuoteGroup {
   width?: number
   height?: number
   manualM2?: number
+  manualFloor?: number
+  manualCeiling?: number
+  manualWalls?: number
+  manualPerimeter?: number
   services: QuoteService[]
 }
 
@@ -58,7 +62,7 @@ interface QuoteStore {
   reset: () => void
 
   // Computed
-  calculateGroupM2: (group: QuoteGroup) => { walls: number; ceiling: number; floor: number }
+  calculateGroupM2: (group: QuoteGroup) => { walls: number; ceiling: number; floor: number; perimeter: number }
   getTotal: () => number
 }
 
@@ -170,14 +174,27 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
   reset: () => set({ draft: initialDraft, currentStep: 0 }),
 
   calculateGroupM2: (group) => {
-    const { length, width, height } = group
-    if (!length || !width) return { walls: 0, ceiling: 0, floor: 0 }
+    const { length, width, height, manualFloor, manualCeiling, manualWalls, manualPerimeter } = group
+
+    // If manual values provided, use them
+    if (manualFloor !== undefined || manualCeiling !== undefined || manualWalls !== undefined || manualPerimeter !== undefined) {
+      return {
+        floor: manualFloor ?? 0,
+        ceiling: manualCeiling ?? 0,
+        walls: manualWalls ?? 0,
+        perimeter: manualPerimeter ?? 0,
+      }
+    }
+
+    // Otherwise calculate from dimensions
+    if (!length || !width) return { walls: 0, ceiling: 0, floor: 0, perimeter: 0 }
 
     const floor = length * width
     const ceiling = floor
     const walls = height ? 2 * (length + width) * height : 0
+    const perimeter = 2 * (length + width)
 
-    return { walls, ceiling, floor }
+    return { walls, ceiling, floor, perimeter }
   },
 
   getTotal: () => {
@@ -192,6 +209,7 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
         if (service.quantitySource === 'ceiling') qty = m2.ceiling || service.quantity
         if (service.quantitySource === 'floor') qty = m2.floor || service.quantity
         if (service.quantitySource === 'walls_ceiling') qty = (m2.walls + m2.ceiling) || service.quantity
+        if (service.quantitySource === 'perimeter') qty = m2.perimeter || service.quantity
         total += qty * service.pricePerUnit
       }
     }

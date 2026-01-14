@@ -47,6 +47,9 @@ export default function RootLayout() {
     }
   }, [isOnline, pendingCount, user?.id, processQueue])
 
+  // Debug
+  console.log('RootLayout state:', { isLoading, fontsLoaded })
+
   // Nie renderuj dopóki auth i fonty nie są gotowe
   if (isLoading || !fontsLoaded) {
     return null

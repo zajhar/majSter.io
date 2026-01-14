@@ -1,5 +1,5 @@
 // SQLite schema for offline storage
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const CREATE_TABLES_SQL = `
   -- Offline queue for pending syncs
@@ -9,7 +9,9 @@ export const CREATE_TABLES_SQL = `
     action TEXT NOT NULL,
     payload TEXT NOT NULL,
     created_at INTEGER NOT NULL,
-    retries INTEGER DEFAULT 0
+    retries INTEGER DEFAULT 0,
+    error TEXT,
+    failed_at INTEGER
   );
 
   -- Cached quotes

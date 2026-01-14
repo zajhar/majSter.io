@@ -111,3 +111,106 @@ export async function getCachedClients(userId: string): Promise<object[]> {
   )
   return result.map((row) => JSON.parse(row.data))
 }
+
+// Single client cache
+export async function cacheClient(userId: string, client: object): Promise<void> {
+  const database = await getDatabase()
+  const now = Date.now()
+  await database.runAsync(
+    `INSERT OR REPLACE INTO clients_cache (id, user_id, data, synced_at, updated_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [(client as any).id, userId, JSON.stringify(client), now, now]
+  )
+}
+
+export async function getCachedClientById(id: string): Promise<object | null> {
+  const database = await getDatabase()
+  const result = await database.getFirstAsync<{ data: string }>(
+    'SELECT data FROM clients_cache WHERE id = ?',
+    [id]
+  )
+  return result ? JSON.parse(result.data) : null
+}
+
+export async function deleteFromClientsCache(id: string): Promise<void> {
+  const database = await getDatabase()
+  await database.runAsync('DELETE FROM clients_cache WHERE id = ?', [id])
+}
+
+// Single quote cache
+export async function cacheQuote(userId: string, quote: object): Promise<void> {
+  const database = await getDatabase()
+  const now = Date.now()
+  await database.runAsync(
+    `INSERT OR REPLACE INTO quotes_cache (id, user_id, data, synced_at, updated_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [(quote as any).id, userId, JSON.stringify(quote), now, now]
+  )
+}
+
+export async function getCachedQuoteById(id: string): Promise<object | null> {
+  const database = await getDatabase()
+  const result = await database.getFirstAsync<{ data: string }>(
+    'SELECT data FROM quotes_cache WHERE id = ?',
+    [id]
+  )
+  return result ? JSON.parse(result.data) : null
+}
+
+export async function deleteFromQuotesCache(id: string): Promise<void> {
+  const database = await getDatabase()
+  await database.runAsync('DELETE FROM quotes_cache WHERE id = ?', [id])
+}
+
+// Clear all local data (for logout)
+export async function clearLocalDatabase(): Promise<void> {
+  const database = await getDatabase()
+  await database.execAsync(`
+    DELETE FROM sync_queue;
+    DELETE FROM quotes_cache;
+    DELETE FROM clients_cache;
+  `)
+}
+
+// Sync error operations
+export async function getSyncErrorForId(entityId: string): Promise<{
+  error: string | null
+  failedAt: number | null
+  queueId: string | null
+} | null> {
+  const database = await getDatabase()
+  // Search for queue items where payload contains this entityId
+  const result = await database.getFirstAsync<{
+    id: string
+    error: string | null
+    failed_at: number | null
+  }>(
+    `SELECT id, error, failed_at FROM sync_queue
+     WHERE payload LIKE ? AND error IS NOT NULL`,
+    [`%"${entityId}"%`]
+  )
+
+  if (!result) return null
+
+  return {
+    error: result.error,
+    failedAt: result.failed_at,
+    queueId: result.id,
+  }
+}
+
+export async function clearSyncError(queueId: string): Promise<void> {
+  const database = await getDatabase()
+  await database.runAsync(
+    'UPDATE sync_queue SET error = NULL, failed_at = NULL, retries = 0 WHERE id = ?',
+    [queueId]
+  )
+}
+
+export async function setSyncError(queueId: string, error: string): Promise<void> {
+  const database = await getDatabase()
+  await database.runAsync(
+    'UPDATE sync_queue SET error = ?, failed_at = ? WHERE id = ?',
+    [error, Date.now(), queueId]
+  )
+}
