@@ -69,7 +69,7 @@ export default function RegisterScreen() {
 
       setUser(data.user)
       setToken(data.token)
-      router.replace('/(tabs)')
+      router.replace('/(auth)/onboarding')
     } catch (error) {
       Alert.alert('Blad', error instanceof Error ? error.message : 'Blad rejestracji')
     } finally {

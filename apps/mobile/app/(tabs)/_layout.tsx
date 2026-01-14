@@ -1,13 +1,20 @@
 import { Tabs, Redirect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../stores/authStore'
+import { trpc } from '../../lib/trpc'
 import { colors, fontFamily } from '../../constants/theme'
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading } = useAuthStore()
 
-  if (isLoading) return null
+  const { data: profile, isLoading: isProfileLoading } = trpc.userSettings.getProfile.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  )
+
+  if (isLoading || isProfileLoading) return null
   if (!isAuthenticated) return <Redirect href="/(auth)/login" />
+  if (profile && !profile.onboardingCompleted) return <Redirect href="/(auth)/onboarding" />
 
   return (
     <Tabs
