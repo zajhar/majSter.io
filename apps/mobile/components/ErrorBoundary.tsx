@@ -121,15 +121,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent.DEFAULT,
+    backgroundColor: colors.primary.DEFAULT,
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     gap: 8,
     ...shadows.sm,
   },
   retryButtonPressed: {
-    backgroundColor: colors.accent[600],
+    backgroundColor: colors.primary[700],
   },
   retryButtonText: {
     color: colors.white,
