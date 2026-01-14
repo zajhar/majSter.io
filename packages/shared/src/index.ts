@@ -1,2 +1,2 @@
 // @majsterio/shared - współdzielone typy
-export * from './types'
+export * from './types/index.js'

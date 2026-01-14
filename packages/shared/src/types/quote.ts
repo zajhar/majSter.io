@@ -1,6 +1,6 @@
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'rejected'
 
-export type QuantitySource = 'walls' | 'ceiling' | 'floor' | 'walls_ceiling' | 'manual'
+export type QuantitySource = 'walls' | 'ceiling' | 'floor' | 'walls_ceiling' | 'perimeter' | 'manual'
 
 export interface QuoteService {
   id: string
