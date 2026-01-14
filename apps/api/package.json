@@ -7,7 +7,7 @@
     "./trpc": "./src/trpc/index.ts"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint src/",
@@ -15,16 +15,21 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "job:reset-quotas": "tsx src/jobs/resetQuotas.ts"
+    "job:reset-quotas": "tsx src/jobs/resetQuotas.ts",
+    "seed:services": "tsx src/scripts/seedSystemServices.ts"
   },
   "dependencies": {
+    "@fastify/compress": "^8.3.1",
     "@fastify/cors": "^10.0.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^10.3.0",
     "@majsterio/db": "workspace:*",
     "@majsterio/shared": "workspace:*",
     "@majsterio/validators": "workspace:*",
     "@react-pdf/renderer": "^4.3.0",
     "@trpc/server": "^11.0.0",
     "better-auth": "^1.2.0",
+    "dotenv": "^16.4.0",
     "drizzle-orm": "^0.41.0",
     "fastify": "^5.2.0",
     "fastify-plugin": "^5.1.0",
