@@ -6,6 +6,8 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
 import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
+import { trpc } from '../../lib/trpc'
+import type { QuantitySource } from '@majsterio/shared'
 
 type DimensionMode = 'full' | 'manual' | 'none'
 
@@ -21,6 +23,9 @@ interface GroupFormState {
   manualCeiling: string
   manualWalls: string
   manualPerimeter: string
+  // Template selection
+  useTemplate: 'none' | 'template'
+  selectedTemplateId: string | null
 }
 
 const initialFormState: GroupFormState = {
@@ -33,6 +38,8 @@ const initialFormState: GroupFormState = {
   manualCeiling: '',
   manualWalls: '',
   manualPerimeter: '',
+  useTemplate: 'none',
+  selectedTemplateId: null,
 }
 
 export function StepGroups() {
@@ -40,6 +47,11 @@ export function StepGroups() {
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<GroupFormState>(initialFormState)
+
+  // Template query
+  const { data: templates } = trpc.groupTemplates.list.useQuery()
+  const systemTemplates = templates?.filter(t => t.isSystem) ?? []
+  const userTemplates = templates?.filter(t => !t.isSystem) ?? []
 
   const resetForm = () => {
     setForm(initialFormState)
@@ -69,11 +81,28 @@ export function StepGroups() {
   const handleSave = () => {
     if (!form.name.trim()) return
 
+    // Determine services based on editing or template selection
+    let services = editingId
+      ? draft.groups.find(g => g.id === editingId)?.services || []
+      : []
+
+    if (!editingId && form.useTemplate === 'template' && form.selectedTemplateId) {
+      const template = templates?.find(t => t.id === form.selectedTemplateId)
+      if (template) {
+        services = template.services.map(s => ({
+          id: `temp_${Math.random().toString(36).slice(2)}`,
+          name: s.name,
+          unit: s.unit,
+          pricePerUnit: s.pricePerUnit,
+          quantity: 0, // Will be calculated from dimensions
+          quantitySource: s.quantitySource as QuantitySource,
+        }))
+      }
+    }
+
     const groupData: Parameters<typeof addGroup>[0] = {
       name: form.name.trim(),
-      services: editingId
-        ? draft.groups.find((g) => g.id === editingId)?.services || []
-        : [],
+      services,
     }
 
     if (form.dimensionMode === 'full') {
@@ -263,6 +292,75 @@ export function StepGroups() {
               onChangeText={(v) => updateField('name', v)}
               autoFocus
             />
+
+            {!editingId && (
+              <>
+                <Text style={styles.label}>Szablon</Text>
+                <View style={styles.radioGroup}>
+                  <Pressable
+                    style={styles.radioOption}
+                    onPress={() => updateField('useTemplate', 'none')}
+                  >
+                    <View style={[styles.radio, form.useTemplate === 'none' && styles.radioSelected]} />
+                    <Text style={styles.radioLabel}>Pusta grupa</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.radioOption}
+                    onPress={() => updateField('useTemplate', 'template')}
+                  >
+                    <View style={[styles.radio, form.useTemplate === 'template' && styles.radioSelected]} />
+                    <Text style={styles.radioLabel}>Z szablonu</Text>
+                  </Pressable>
+                </View>
+
+                {form.useTemplate === 'template' && (
+                  <View style={styles.templatePicker}>
+                    {systemTemplates.length > 0 && (
+                      <>
+                        <Text style={styles.templateSectionTitle}>SYSTEMOWE</Text>
+                        {systemTemplates.map(t => (
+                          <Pressable
+                            key={t.id}
+                            style={[
+                              styles.templateItem,
+                              form.selectedTemplateId === t.id && styles.templateItemSelected
+                            ]}
+                            onPress={() => {
+                              updateField('selectedTemplateId', t.id)
+                              if (!form.name) updateField('name', t.name)
+                            }}
+                          >
+                            <Text style={styles.templateName}>{t.name}</Text>
+                            <Text style={styles.templateCount}>{t.services.length} usług</Text>
+                          </Pressable>
+                        ))}
+                      </>
+                    )}
+                    {userTemplates.length > 0 && (
+                      <>
+                        <Text style={styles.templateSectionTitle}>MOJE SZABLONY</Text>
+                        {userTemplates.map(t => (
+                          <Pressable
+                            key={t.id}
+                            style={[
+                              styles.templateItem,
+                              form.selectedTemplateId === t.id && styles.templateItemSelected
+                            ]}
+                            onPress={() => {
+                              updateField('selectedTemplateId', t.id)
+                              if (!form.name) updateField('name', t.name)
+                            }}
+                          >
+                            <Text style={styles.templateName}>{t.name}</Text>
+                            <Text style={styles.templateCount}>{t.services.length} usług</Text>
+                          </Pressable>
+                        ))}
+                      </>
+                    )}
+                  </View>
+                )}
+              </>
+            )}
 
             <Text style={styles.label}>Wymiary</Text>
             <View style={styles.modeButtons}>
@@ -705,5 +803,66 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     color: colors.primary[700],
     lineHeight: 18,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  radioSelected: {
+    borderColor: colors.primary.DEFAULT,
+    backgroundColor: colors.primary.DEFAULT,
+  },
+  radioLabel: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
+  },
+  templatePicker: {
+    marginBottom: 16,
+  },
+  templateSectionTitle: {
+    fontSize: 12,
+    fontFamily: fontFamily.medium,
+    color: colors.text.muted,
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  templateItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  templateItemSelected: {
+    borderColor: colors.primary.DEFAULT,
+    backgroundColor: colors.primary[50],
+  },
+  templateName: {
+    fontSize: 14,
+    fontFamily: fontFamily.medium,
+    color: colors.text.heading,
+  },
+  templateCount: {
+    fontSize: 12,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
   },
 })
