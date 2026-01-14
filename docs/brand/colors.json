@@ -1,0 +1,109 @@
+{
+  "version": "2.0",
+  "name": "Blue Collar Tech",
+  "colors": {
+    "primary": {
+      "value": "#2563EB",
+      "rgb": "37, 99, 235",
+      "name": "Blueprint Blue",
+      "tailwind": "blue-600",
+      "usage": "Primary buttons, active tabs, links, focus borders"
+    },
+    "tool": {
+      "value": "#F59E0B",
+      "rgb": "245, 158, 11",
+      "name": "Laser Amber",
+      "tailwind": "amber-500",
+      "usage": "Measurement icons, m² badges, status 'W toku', tool accents"
+    },
+    "background": {
+      "value": "#F1F5F9",
+      "rgb": "241, 245, 249",
+      "name": "Concrete Mist",
+      "tailwind": "slate-100",
+      "usage": "Main app background"
+    },
+    "surface": {
+      "value": "#FFFFFF",
+      "rgb": "255, 255, 255",
+      "name": "Paper White",
+      "usage": "Cards, modals, inputs"
+    },
+    "text": {
+      "heading": {
+        "value": "#0F172A",
+        "name": "Heavy Metal",
+        "tailwind": "slate-900",
+        "usage": "Headings, main text, header background"
+      },
+      "body": {
+        "value": "#475569",
+        "name": "Slate",
+        "tailwind": "slate-600",
+        "usage": "Body text"
+      },
+      "muted": {
+        "value": "#64748B",
+        "name": "Steel Gray",
+        "tailwind": "slate-500",
+        "usage": "Helper text, inactive icons, metadata"
+      }
+    },
+    "status": {
+      "success": {
+        "value": "#059669",
+        "name": "Profit Green",
+        "tailwind": "emerald-600",
+        "usage": "Money totals, 'Zaakceptowane' status, success states"
+      },
+      "warning": {
+        "value": "#F59E0B",
+        "name": "Laser Amber",
+        "tailwind": "amber-500",
+        "usage": "Offline indicator, 'W toku' status"
+      },
+      "error": {
+        "value": "#DC2626",
+        "name": "Stop Red",
+        "tailwind": "red-600",
+        "usage": "Delete actions, errors, 'Odrzucona' status"
+      }
+    },
+    "border": {
+      "default": {
+        "value": "#CBD5E1",
+        "tailwind": "slate-300"
+      },
+      "focus": {
+        "value": "#2563EB",
+        "tailwind": "blue-600"
+      },
+      "measurement": {
+        "value": "#F59E0B",
+        "tailwind": "amber-500"
+      }
+    }
+  },
+  "typography": {
+    "font": "Inter",
+    "source": "Google Fonts"
+  },
+  "tailwind": {
+    "extend": {
+      "colors": {
+        "primary": {
+          "DEFAULT": "#2563EB",
+          "dark": "#1E3A8A"
+        },
+        "tool": {
+          "DEFAULT": "#F59E0B",
+          "dark": "#B45309"
+        },
+        "canvas": {
+          "DEFAULT": "#F1F5F9",
+          "paper": "#FFFFFF"
+        }
+      }
+    }
+  }
+}
