@@ -132,15 +132,15 @@ export const spacing = {
   xxxl: 48,
 } as const
 
-// Border radius scale - OdFachowca soft & rounded
+// Border radius scale - Blue Collar Tech (precise, not soft)
 export const borderRadius = {
   none: 0,
-  sm: 4,
-  md: 8,       // inputs
-  lg: 12,      // buttons
-  xl: 16,      // cards, modals
+  sm: 4,       // checkboxes, tags
+  md: 8,       // inputs, buttons, inner containers (was 8, buttons were 12)
+  lg: 12,      // cards, modals, bottom sheets (was 16)
+  xl: 16,      // special large cards
   xxl: 24,
-  full: 9999,  // chips, avatars
+  full: 9999,  // pills, avatars
 } as const
 
 // Font sizes
