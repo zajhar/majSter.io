@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
 import { trpc } from '../../lib/trpc'
 import { DEFAULT_DISCLAIMER } from '@majsterio/shared'
+import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
 interface Props {
   onSubmit: () => void
@@ -52,6 +53,7 @@ export function StepPreview({ onSubmit, isLoading }: Props) {
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="np. Wycena obejmuje..."
+          placeholderTextColor={colors.text.muted}
           value={notesBefore}
           onChangeText={setNotesBefore}
           multiline
@@ -115,6 +117,7 @@ export function StepPreview({ onSubmit, isLoading }: Props) {
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="np. Termin realizacji..."
+          placeholderTextColor={colors.text.muted}
           value={notesAfter}
           onChangeText={setNotesAfter}
           multiline
@@ -129,7 +132,7 @@ export function StepPreview({ onSubmit, isLoading }: Props) {
           <Switch
             value={showDisclaimer}
             onValueChange={setShowDisclaimer}
-            trackColor={{ true: '#2563eb' }}
+            trackColor={{ true: colors.primary.DEFAULT }}
           />
         </View>
         {showDisclaimer && (
@@ -155,63 +158,136 @@ export function StepPreview({ onSubmit, isLoading }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   header: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary.DEFAULT,
     padding: 24,
     alignItems: 'center',
   },
-  previewLabel: { fontSize: 14, color: '#bfdbfe' },
-  total: { fontSize: 42, fontWeight: '700', color: 'white', marginTop: 8 },
-  section: { backgroundColor: 'white', padding: 16, marginTop: 12 },
-  sectionTitle: { fontSize: 12, fontWeight: '600', color: '#6b7280', marginBottom: 8 },
-  clientName: { fontSize: 18, fontWeight: '600', color: '#1f2937' },
-  clientAddress: { fontSize: 14, color: '#6b7280', marginTop: 4 },
-  input: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 14,
-    borderRadius: 10,
-    fontSize: 16,
+  previewLabel: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.primary[200],
   },
-  textArea: { height: 80, textAlignVertical: 'top' },
-  groupCard: { backgroundColor: 'white', padding: 16, marginTop: 12 },
+  total: {
+    fontSize: 42,
+    fontFamily: fontFamily.bold,
+    color: colors.white,
+    marginTop: 8,
+  },
+  section: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.muted,
+    marginBottom: 8,
+  },
+  clientName: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+  },
+  clientAddress: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 4,
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 14,
+    borderRadius: borderRadius.md,
+    fontSize: 16,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  groupCard: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+  },
   groupHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: colors.border,
   },
-  groupName: { fontSize: 16, fontWeight: '600', color: '#1f2937' },
-  groupTotal: { fontSize: 16, fontWeight: '600', color: '#2563eb' },
+  groupName: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+  },
+  groupTotal: {
+    fontSize: 16,
+    fontFamily: fontFamily.semibold,
+    color: colors.primary.DEFAULT,
+  },
   serviceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
   },
-  serviceName: { fontSize: 14, color: '#374151' },
-  servicePrice: { fontSize: 14, color: '#6b7280' },
-  disclaimerSection: { backgroundColor: 'white', padding: 16, marginTop: 12 },
+  serviceName: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.body,
+  },
+  servicePrice: {
+    fontSize: 14,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+  },
+  disclaimerSection: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    marginTop: 12,
+  },
   disclaimerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  disclaimerText: { fontSize: 12, color: '#6b7280', marginTop: 12, lineHeight: 18 },
+  disclaimerText: {
+    fontSize: 12,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 12,
+    lineHeight: 18,
+  },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#16a34a',
+    backgroundColor: colors.success.DEFAULT,
     padding: 18,
     margin: 16,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     gap: 8,
   },
-  submitButtonDisabled: { opacity: 0.7 },
-  submitButtonText: { color: 'white', fontSize: 18, fontWeight: '600' },
-  spacer: { height: 32 },
+  submitButtonDisabled: {
+    opacity: 0.7,
+  },
+  submitButtonText: {
+    color: colors.white,
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+  },
+  spacer: {
+    height: 32,
+  },
 })

@@ -298,14 +298,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   submitButton: {
-    backgroundColor: colors.accent.DEFAULT,
-    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary.DEFAULT,
+    borderRadius: borderRadius.md,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
   },
   submitButtonDisabled: {
-    backgroundColor: colors.accent[300],
+    backgroundColor: colors.primary[300],
   },
   submitButtonText: {
     fontSize: 16,
