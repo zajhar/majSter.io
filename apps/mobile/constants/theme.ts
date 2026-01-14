@@ -187,25 +187,30 @@ export const shadows = {
   },
 }
 
-// Font family - OdFachowca uses Nunito
+// Font family - Blue Collar Tech uses Inter
 export const fontFamily = {
-  regular: 'Nunito-Regular',
-  medium: 'Nunito-Medium',
-  semibold: 'Nunito-SemiBold',
-  bold: 'Nunito-Bold',
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  semibold: 'Inter-SemiBold',
+  bold: 'Inter-Bold',
 } as const
 
-// Typography scale - Mobile
+// Typography scale - Blue Collar Tech
 export const typography = {
+  displayXL: {
+    fontFamily: fontFamily.bold,
+    fontSize: 32,
+    lineHeight: 38,
+  },
   h1: {
     fontFamily: fontFamily.bold,
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 24,
+    lineHeight: 31,
   },
   h2: {
     fontFamily: fontFamily.semibold,
-    fontSize: 22,
-    lineHeight: 29,
+    fontSize: 20,
+    lineHeight: 28,
   },
   h3: {
     fontFamily: fontFamily.semibold,
@@ -217,15 +222,27 @@ export const typography = {
     fontSize: 16,
     lineHeight: 24,
   },
+  bodyBold: {
+    fontFamily: fontFamily.medium,
+    fontSize: 16,
+    lineHeight: 24,
+  },
   small: {
     fontFamily: fontFamily.regular,
     fontSize: 14,
     lineHeight: 21,
   },
   caption: {
-    fontFamily: fontFamily.regular,
-    fontSize: 12,
-    lineHeight: 17,
+    fontFamily: fontFamily.medium,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  techLabel: {
+    fontFamily: fontFamily.bold,
+    fontSize: 11,
+    lineHeight: 11,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
   },
 } as const
 
