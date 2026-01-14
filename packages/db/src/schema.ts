@@ -80,7 +80,7 @@ export const clients = pgTable('clients', {
 export const quotes = pgTable('quotes', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
-  clientId: uuid('client_id').notNull().references(() => clients.id),
+  clientId: uuid('client_id').references(() => clients.id, { onDelete: 'set null' }),
   number: serial('number'),
   status: varchar('status', { length: 20 }).default('draft').notNull(),
   notesBefore: text('notes_before'),
