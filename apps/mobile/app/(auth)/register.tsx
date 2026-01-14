@@ -203,9 +203,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   registerButton: {
-    backgroundColor: colors.accent.DEFAULT,
+    backgroundColor: colors.primary.DEFAULT,
     padding: 16,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
     marginTop: 8,
   },
