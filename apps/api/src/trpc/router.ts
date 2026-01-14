@@ -4,6 +4,7 @@ import { quotesRouter } from './procedures/quotes.js'
 import { templatesRouter } from './procedures/templates.js'
 import { subscriptionsRouter } from './procedures/subscriptions.js'
 import { groupTemplatesRouter } from './procedures/groupTemplates.js'
+import { tradeTypesRouter } from './procedures/tradeTypes.js'
 
 export const appRouter = router({
   health: publicProcedure.query(() => {
@@ -19,6 +20,7 @@ export const appRouter = router({
   templates: templatesRouter,
   subscriptions: subscriptionsRouter,
   groupTemplates: groupTemplatesRouter,
+  tradeTypes: tradeTypesRouter,
 })
 
 export type AppRouter = typeof appRouter
