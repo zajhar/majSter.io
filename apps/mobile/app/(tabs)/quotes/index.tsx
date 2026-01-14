@@ -5,10 +5,10 @@ import { useQuotesList } from '../../../hooks/useOfflineQuotes'
 import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 const STATUS_CONFIG = {
-  draft: { label: 'Szkic', color: colors.text.body, bg: '#F1F5F9' },
-  sent: { label: 'Wysłana', color: colors.primary.DEFAULT, bg: colors.primary[100] },
-  accepted: { label: 'Zaakceptowana', color: colors.success.DEFAULT, bg: colors.success[100] },
-  rejected: { label: 'Odrzucona', color: colors.error.DEFAULT, bg: colors.error[100] },
+  draft: { label: 'Szkic', color: colors.text.body, bg: colors.background, borderColor: colors.tool.DEFAULT },
+  sent: { label: 'Wysłana', color: colors.primary.DEFAULT, bg: colors.primary[100], borderColor: colors.primary.DEFAULT },
+  accepted: { label: 'Zaakceptowana', color: colors.success.DEFAULT, bg: colors.success[100], borderColor: colors.success.DEFAULT },
+  rejected: { label: 'Odrzucona', color: colors.error.DEFAULT, bg: colors.error[100], borderColor: colors.error.DEFAULT },
 }
 
 export default function QuotesListScreen() {
@@ -30,7 +30,7 @@ export default function QuotesListScreen() {
           const status = STATUS_CONFIG[item.status as keyof typeof STATUS_CONFIG]
           return (
             <Link href={`/(tabs)/quotes/${item.id}`} asChild>
-              <Pressable style={styles.quoteCard}>
+              <Pressable style={[styles.quoteCard, { borderLeftColor: status.borderColor }]}>
                 <View style={styles.quoteHeader}>
                   <Text style={styles.quoteNumber}>#{item.number}</Text>
                   <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
@@ -42,7 +42,7 @@ export default function QuotesListScreen() {
                 <Text style={styles.quoteDate}>{formatDate(item.createdAt)}</Text>
                 <View style={styles.quoteFooter}>
                   <Text style={styles.quoteTotal}>{item.total} zł</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                  <Ionicons name="chevron-forward" size={20} color={colors.text.muted} />
                 </View>
               </Pressable>
             </Link>
@@ -50,7 +50,7 @@ export default function QuotesListScreen() {
         }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={64} color="#d1d5db" />
+            <Ionicons name="document-text-outline" size={64} color={colors.text.muted} />
             <Text style={styles.emptyText}>
               {isLoading ? 'Ładowanie...' : 'Brak wycen'}
             </Text>
@@ -74,8 +74,9 @@ const styles = StyleSheet.create({
   quoteCard: {
     backgroundColor: colors.surface,
     padding: 16,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     marginBottom: 12,
+    borderLeftWidth: 4,
     ...shadows.md,
   },
   quoteHeader: {
@@ -132,7 +133,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.accent.DEFAULT,
+    backgroundColor: colors.primary.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.lg,

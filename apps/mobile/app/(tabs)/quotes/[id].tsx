@@ -10,7 +10,7 @@ import { generateQuotePdf, shareQuotePdf } from '../../../services/pdf'
 import { colors, fontFamily, borderRadius, shadows } from '../../../constants/theme'
 
 const STATUS_CONFIG = {
-  draft: { label: 'Szkic', color: colors.text.body, bg: '#F1F5F9' },
+  draft: { label: 'Szkic', color: colors.text.body, bg: colors.background },
   sent: { label: 'Wysłana', color: colors.primary.DEFAULT, bg: colors.primary[100] },
   accepted: { label: 'Zaakceptowana', color: colors.success.DEFAULT, bg: colors.success[100] },
   rejected: { label: 'Odrzucona', color: colors.error.DEFAULT, bg: colors.error[100] },
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: 20,
     alignItems: 'center',
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     margin: 16,
     marginBottom: 0,
     ...shadows.md,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 12,
     marginHorizontal: 16,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     ...shadows.sm,
   },
   sectionTitle: {
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 12,
     marginHorizontal: 16,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     ...shadows.sm,
   },
   groupName: {
@@ -326,9 +326,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.accent.DEFAULT,
+    backgroundColor: colors.primary.DEFAULT,
     padding: 16,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     gap: 8,
     ...shadows.md,
   },
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   shareButtonDisabled: { opacity: 0.7 },
   deleteButton: {
     padding: 16,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.error[100],
     backgroundColor: colors.error[50],

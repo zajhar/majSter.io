@@ -147,9 +147,9 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   button: {
-    backgroundColor: colors.accent.DEFAULT,
+    backgroundColor: colors.primary.DEFAULT,
     padding: 16,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
     marginTop: 24,
     ...shadows.md,
