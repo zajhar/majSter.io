@@ -47,11 +47,20 @@ export function StepGroups() {
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<GroupFormState>(initialFormState)
+  const [showAllTemplates, setShowAllTemplates] = useState(false)
 
-  // Template query
+  // Template and user trade types queries
   const { data: templates } = trpc.groupTemplates.list.useQuery()
-  const systemTemplates = templates?.filter(t => t.isSystem) ?? []
+  const { data: profile } = trpc.userSettings.getProfile.useQuery()
+  const userTradeTypes = profile?.tradeTypes ?? []
+
+  // Filter system templates by user's trade types (or show all if toggle is on)
+  const allSystemTemplates = templates?.filter(t => t.isSystem) ?? []
+  const systemTemplates = showAllTemplates
+    ? allSystemTemplates
+    : allSystemTemplates.filter(t => !t.category || userTradeTypes.includes(t.category))
   const userTemplates = templates?.filter(t => !t.isSystem) ?? []
+  const hasHiddenTemplates = allSystemTemplates.length > systemTemplates.length
 
   const resetForm = () => {
     setForm(initialFormState)
@@ -315,6 +324,21 @@ export function StepGroups() {
 
                 {form.useTemplate === 'template' && (
                   <View style={styles.templatePicker}>
+                    {hasHiddenTemplates && (
+                      <Pressable
+                        style={styles.showAllToggle}
+                        onPress={() => setShowAllTemplates(!showAllTemplates)}
+                      >
+                        <Text style={styles.showAllToggleText}>
+                          {showAllTemplates ? 'Pokaż tylko moje branże' : 'Pokaż wszystkie szablony'}
+                        </Text>
+                        <Ionicons
+                          name={showAllTemplates ? 'eye-off-outline' : 'eye-outline'}
+                          size={16}
+                          color={colors.primary.DEFAULT}
+                        />
+                      </Pressable>
+                    )}
                     {systemTemplates.length > 0 && (
                       <>
                         <Text style={styles.templateSectionTitle}>SYSTEMOWE</Text>
@@ -832,6 +856,21 @@ const styles = StyleSheet.create({
   },
   templatePicker: {
     marginBottom: 16,
+  },
+  showAllToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    marginBottom: 8,
+    backgroundColor: colors.primary[50],
+    borderRadius: borderRadius.md,
+  },
+  showAllToggleText: {
+    fontSize: 13,
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
   },
   templateSectionTitle: {
     fontSize: 12,
