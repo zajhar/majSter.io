@@ -181,6 +181,33 @@ export const materialTemplates = pgTable('material_templates', {
   index('material_templates_user_id_idx').on(table.userId),
 ])
 
+// ========== GROUP TEMPLATES ==========
+
+export const groupTemplates = pgTable('group_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  isSystem: boolean('is_system').default(false).notNull(),
+  sortOrder: integer('sort_order').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  index('group_templates_user_id_idx').on(table.userId),
+])
+
+export const groupTemplateServices = pgTable('group_template_services', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  templateId: uuid('template_id').notNull().references(() => groupTemplates.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 200 }).notNull(),
+  unit: varchar('unit', { length: 20 }).notNull(),
+  pricePerUnit: decimal('price_per_unit', { precision: 10, scale: 2 }).notNull(),
+  quantitySource: varchar('quantity_source', { length: 20 }).default('manual').notNull(),
+  sortOrder: integer('sort_order').default(0).notNull(),
+}, (table) => [
+  index('group_template_services_template_id_idx').on(table.templateId),
+])
+
 // ========== USER SETTINGS ==========
 
 export const userSettings = pgTable('user_settings', {
