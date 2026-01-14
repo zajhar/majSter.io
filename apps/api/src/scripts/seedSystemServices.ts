@@ -6,7 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 dotenv.config({ path: path.resolve(__dirname, '../../../../.env') })
 
 import { getDb, closeDb } from '../db/index.js'
-import { serviceTemplates } from '@majsterio/db'
+import { serviceTemplates, user } from '@majsterio/db'
 import { systemServices, CATEGORIES } from '../data/systemServices.js'
 import { eq } from 'drizzle-orm'
 
@@ -16,6 +16,18 @@ async function seed() {
   console.log('Seeding system services...')
 
   const db = getDb()
+
+  // Upewnij się, że użytkownik systemowy istnieje
+  const existingUser = await db.select().from(user).where(eq(user.id, SYSTEM_USER_ID)).limit(1)
+  if (existingUser.length === 0) {
+    await db.insert(user).values({
+      id: SYSTEM_USER_ID,
+      name: 'System',
+      email: 'system@majsterio.pl',
+      emailVerified: true,
+    })
+    console.log('Created system user')
+  }
 
   // Usuń stare systemowe usługi
   await db.delete(serviceTemplates).where(eq(serviceTemplates.isSystem, true))
@@ -28,6 +40,7 @@ async function seed() {
     unit: service.unit,
     category: service.category,
     quantitySource: service.quantitySource,
+    defaultPrice: String(service.defaultPrice),
     isSystem: true,
     sortOrder: index,
   }))
