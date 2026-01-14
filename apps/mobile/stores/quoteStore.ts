@@ -45,6 +45,8 @@ interface QuoteDraft {
 interface QuoteStore {
   draft: QuoteDraft
   currentStep: number
+  mode: 'create' | 'edit'
+  editingQuoteId: string | null
 
   // Actions
   setClientId: (clientId: string) => void
@@ -60,6 +62,38 @@ interface QuoteStore {
   setDisclaimer: (disclaimer: string | null, show: boolean) => void
   setStep: (step: number) => void
   reset: () => void
+  initForEdit: (quote: {
+    id: string
+    clientId: string | null
+    groups: Array<{
+      name: string
+      length?: string | null
+      width?: string | null
+      height?: string | null
+      manualM2?: string | null
+      manualFloor?: string | null
+      manualCeiling?: string | null
+      manualWalls?: string | null
+      manualPerimeter?: string | null
+      services: Array<{
+        name: string
+        quantity: string
+        unit: string
+        pricePerUnit: string
+        quantitySource: string
+      }>
+    }>
+    materials: Array<{
+      name: string
+      quantity: string
+      unit: string
+      pricePerUnit: string
+    }>
+    notesBefore?: string | null
+    notesAfter?: string | null
+    disclaimer?: string | null
+    showDisclaimer: boolean
+  }) => void
 
   // Computed
   calculateGroupM2: (group: QuoteGroup) => { walls: number; ceiling: number; floor: number; perimeter: number }
@@ -81,6 +115,8 @@ const initialDraft: QuoteDraft = {
 export const useQuoteStore = create<QuoteStore>((set, get) => ({
   draft: initialDraft,
   currentStep: 0,
+  mode: 'create' as const,
+  editingQuoteId: null,
 
   setClientId: (clientId) => set((state) => ({
     draft: { ...state.draft, clientId }
@@ -171,7 +207,47 @@ export const useQuoteStore = create<QuoteStore>((set, get) => ({
 
   setStep: (step) => set({ currentStep: step }),
 
-  reset: () => set({ draft: initialDraft, currentStep: 0 }),
+  reset: () => set({ draft: initialDraft, currentStep: 0, mode: 'create', editingQuoteId: null }),
+
+  initForEdit: (quote) => set({
+    mode: 'edit',
+    editingQuoteId: quote.id,
+    currentStep: 0,
+    draft: {
+      clientId: quote.clientId,
+      groups: quote.groups.map((g) => ({
+        id: generateId(),
+        name: g.name,
+        length: g.length ? parseFloat(g.length) : undefined,
+        width: g.width ? parseFloat(g.width) : undefined,
+        height: g.height ? parseFloat(g.height) : undefined,
+        manualM2: g.manualM2 ? parseFloat(g.manualM2) : undefined,
+        manualFloor: g.manualFloor ? parseFloat(g.manualFloor) : undefined,
+        manualCeiling: g.manualCeiling ? parseFloat(g.manualCeiling) : undefined,
+        manualWalls: g.manualWalls ? parseFloat(g.manualWalls) : undefined,
+        manualPerimeter: g.manualPerimeter ? parseFloat(g.manualPerimeter) : undefined,
+        services: g.services.map((s) => ({
+          id: generateId(),
+          name: s.name,
+          quantity: parseFloat(s.quantity),
+          unit: s.unit,
+          pricePerUnit: parseFloat(s.pricePerUnit),
+          quantitySource: s.quantitySource as QuantitySource,
+        })),
+      })),
+      materials: quote.materials.map((m) => ({
+        id: generateId(),
+        name: m.name,
+        quantity: parseFloat(m.quantity),
+        unit: m.unit,
+        pricePerUnit: parseFloat(m.pricePerUnit),
+      })),
+      notesBefore: quote.notesBefore ?? '',
+      notesAfter: quote.notesAfter ?? '',
+      disclaimer: quote.disclaimer ?? null,
+      showDisclaimer: quote.showDisclaimer,
+    },
+  }),
 
   calculateGroupM2: (group) => {
     const { length, width, height, manualFloor, manualCeiling, manualWalls, manualPerimeter } = group
