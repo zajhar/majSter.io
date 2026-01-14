@@ -9,6 +9,7 @@ import {
   integer,
   serial,
   index,
+  primaryKey,
 } from 'drizzle-orm/pg-core'
 
 // ========== BETTER AUTH TABLES ==========
@@ -188,6 +189,7 @@ export const groupTemplates = pgTable('group_templates', {
   userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
   description: text('description'),
+  category: varchar('category', { length: 50 }).references(() => tradeTypes.id),
   isSystem: boolean('is_system').default(false).notNull(),
   sortOrder: integer('sort_order').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -218,7 +220,25 @@ export const userSettings = pgTable('user_settings', {
   defaultDisclaimer: text('default_disclaimer'),
   showDisclaimerByDefault: boolean('show_disclaimer_default').default(true).notNull(),
   tradeType: varchar('trade_type', { length: 50 }),
+  onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
 })
+
+// ========== TRADE TYPES ==========
+
+export const tradeTypes = pgTable('trade_types', {
+  id: varchar('id', { length: 50 }).primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  icon: varchar('icon', { length: 50 }),
+  sortOrder: integer('sort_order').default(0).notNull(),
+})
+
+export const userTradeTypes = pgTable('user_trade_types', {
+  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  tradeTypeId: varchar('trade_type_id', { length: 50 }).notNull().references(() => tradeTypes.id, { onDelete: 'cascade' }),
+}, (table) => [
+  primaryKey({ columns: [table.userId, table.tradeTypeId] }),
+  index('user_trade_types_user_id_idx').on(table.userId),
+])
 
 // ========== SUBSCRIPTIONS ==========
 
