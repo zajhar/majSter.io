@@ -1,7 +1,7 @@
 import { Tabs, Redirect } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '../../stores/authStore'
-import { colors } from '../../constants/theme'
+import { colors, fontFamily } from '../../constants/theme'
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading } = useAuthStore()
@@ -23,7 +23,7 @@ export default function TabLayout() {
         },
         headerTintColor: colors.text.heading,
         headerTitleStyle: {
-          fontFamily: 'Nunito-SemiBold',
+          fontFamily: fontFamily.semibold,
         },
         headerShown: true,
       }}
