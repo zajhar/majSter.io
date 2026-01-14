@@ -57,10 +57,6 @@ export default function QuoteCreateScreen() {
   }
 
   const handleSubmit = async () => {
-    if (!draft.clientId) {
-      Alert.alert('Błąd', 'Wybierz klienta')
-      return
-    }
     if (draft.groups.length === 0) {
       Alert.alert('Błąd', 'Dodaj co najmniej jedną grupę')
       return
@@ -68,7 +64,7 @@ export default function QuoteCreateScreen() {
 
     setIsSaving(true)
     const result = await create({
-      clientId: draft.clientId,
+      clientId: draft.clientId ?? undefined,
       notesBefore: draft.notesBefore || undefined,
       notesAfter: draft.notesAfter || undefined,
       disclaimer: draft.disclaimer || undefined,
@@ -121,7 +117,7 @@ export default function QuoteCreateScreen() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 0: return !!draft.clientId
+      case 0: return true // Client is optional
       case 1: return draft.groups.length > 0
       case 2: return draft.groups.some(g => g.services.length > 0)
       case 3: return true // Materials are optional
