@@ -1,18 +1,9 @@
-import type { QuantitySource } from '@majsterio/shared'
+import type { QuantitySource, ServiceCategoryKey } from '@majsterio/shared'
+import { SERVICE_CATEGORIES } from '@majsterio/shared'
 
-export const CATEGORIES = {
-  malowanie_tynki: 'Malowanie i tynki',
-  podlogi: 'Podłogi',
-  hydraulika: 'Hydraulika',
-  elektryka: 'Elektryka',
-  hvac: 'HVAC/Klimatyzacja',
-  ogolnobudowlane: 'Prace ogólnobudowlane',
-  ziemne: 'Prace ziemne',
-  ogrodowe: 'Prace ogrodowe',
-  slusarskie: 'Prace ślusarskie',
-} as const
-
-export type CategoryKey = keyof typeof CATEGORIES
+// Re-eksport dla wstecznej kompatybilności
+export const CATEGORIES = SERVICE_CATEGORIES
+export type CategoryKey = ServiceCategoryKey
 
 export interface SystemService {
   name: string

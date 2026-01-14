@@ -1,2 +1,3 @@
-// @majsterio/shared - współdzielone typy
-export * from './types/index.js'
+// @majsterio/shared - współdzielone typy i stałe
+export * from './types'
+export * from './constants/categories'

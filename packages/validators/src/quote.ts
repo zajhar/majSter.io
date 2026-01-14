@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const quantitySourceSchema = z.enum(['walls', 'ceiling', 'floor', 'walls_ceiling', 'manual'])
+export const quantitySourceSchema = z.enum(['walls', 'ceiling', 'floor', 'walls_ceiling', 'perimeter', 'manual'])
 
 export const createQuoteServiceSchema = z.object({
   name: z.string().min(1, 'Nazwa usługi jest wymagana').max(200),
