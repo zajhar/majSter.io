@@ -41,7 +41,7 @@ interface QuoteData {
   disclaimer?: string | null
   showDisclaimer: boolean
   createdAt: Date
-  client: Client
+  client: Client | null
   groups: Group[]
   materials: Material[]
 }
@@ -79,10 +79,14 @@ export function QuotePdfTemplate({ quote, isPro = false }: Props) {
         {/* Client Info */}
         <View style={styles.clientInfo}>
           <Text style={styles.clientName}>
-            {quote.client.firstName} {quote.client.lastName}
+            {quote.client
+              ? `${quote.client.firstName} ${quote.client.lastName}`
+              : '---'}
           </Text>
-          {quote.client.siteAddress && (
+          {quote.client?.siteAddress ? (
             <Text style={styles.clientAddress}>{quote.client.siteAddress}</Text>
+          ) : (
+            <Text style={styles.clientAddress}>---</Text>
           )}
           <Text style={styles.date}>Data: {formatDate(quote.createdAt)}</Text>
         </View>

@@ -40,7 +40,7 @@ interface QuoteData {
   disclaimer?: string | null
   showDisclaimer: boolean
   createdAt: Date
-  client: Client
+  client: Client | null
   groups: Group[]
   materials: Material[]
 }
