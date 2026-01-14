@@ -3,7 +3,7 @@ import { eq, and, desc, inArray } from 'drizzle-orm'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, paidProcedure } from '../trpc.js'
 import { quotes, quoteGroups, quoteServices, quoteMaterials, clients, subscriptions } from '@majsterio/db'
-import { createQuoteSchema } from '@majsterio/validators'
+import { createQuoteSchema, updateQuoteSchema } from '@majsterio/validators'
 import { incrementQuoteCount } from '../../lib/subscription.js'
 import type { Database } from '../../db/index.js'
 
@@ -215,6 +215,119 @@ export const quotesRouter = router({
       return { success: true }
     }),
 
+  update: protectedProcedure
+    .input(updateQuoteSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { id, ...data } = input
+
+      // Sprawdź czy wycena należy do użytkownika
+      const [existing] = await ctx.db
+        .select()
+        .from(quotes)
+        .where(and(eq(quotes.id, id), eq(quotes.userId, ctx.user.id)))
+
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Quote not found' })
+      }
+
+      // Usuń stare grupy, usługi i materiały (cascade usunie services)
+      await ctx.db.delete(quoteGroups).where(eq(quoteGroups.quoteId, id))
+      await ctx.db.delete(quoteMaterials).where(eq(quoteMaterials.quoteId, id))
+
+      // Aktualizuj podstawowe dane wyceny
+      await ctx.db
+        .update(quotes)
+        .set({
+          clientId: data.clientId ?? null,
+          notesBefore: data.notesBefore,
+          notesAfter: data.notesAfter,
+          disclaimer: data.disclaimer,
+          showDisclaimer: data.showDisclaimer ?? true,
+          updatedAt: new Date(),
+        })
+        .where(eq(quotes.id, id))
+
+      let totalSum = 0
+
+      // Utwórz nowe grupy i usługi
+      for (let i = 0; i < data.groups.length; i++) {
+        const groupInput = data.groups[i]
+        const m2 = calculateM2(groupInput.length, groupInput.width, groupInput.height)
+
+        const [group] = await ctx.db
+          .insert(quoteGroups)
+          .values({
+            quoteId: id,
+            name: groupInput.name,
+            length: groupInput.length?.toString(),
+            width: groupInput.width?.toString(),
+            height: groupInput.height?.toString(),
+            wallsM2: m2.wallsM2?.toString(),
+            ceilingM2: m2.ceilingM2?.toString(),
+            floorM2: m2.floorM2?.toString(),
+            manualM2: groupInput.manualM2?.toString(),
+            sortOrder: i,
+          })
+          .returning()
+
+        for (let j = 0; j < groupInput.services.length; j++) {
+          const serviceInput = groupInput.services[j]
+          const quantity = getQuantity(
+            serviceInput.quantitySource,
+            {
+              wallsM2: m2.wallsM2,
+              ceilingM2: m2.ceilingM2,
+              floorM2: m2.floorM2,
+              manualM2: groupInput.manualM2 ?? null
+            },
+            serviceInput.quantity
+          )
+          const total = quantity * serviceInput.pricePerUnit
+          totalSum += total
+
+          await ctx.db.insert(quoteServices).values({
+            groupId: group.id,
+            name: serviceInput.name,
+            quantity: quantity.toString(),
+            unit: serviceInput.unit,
+            pricePerUnit: serviceInput.pricePerUnit.toString(),
+            total: total.toString(),
+            quantitySource: serviceInput.quantitySource,
+            sortOrder: j,
+          })
+        }
+      }
+
+      // Utwórz nowe materiały
+      if (data.materials) {
+        for (let i = 0; i < data.materials.length; i++) {
+          const materialInput = data.materials[i]
+          const total = materialInput.quantity * materialInput.pricePerUnit
+          totalSum += total
+
+          await ctx.db.insert(quoteMaterials).values({
+            quoteId: id,
+            groupId: materialInput.groupId,
+            name: materialInput.name,
+            quantity: materialInput.quantity.toString(),
+            unit: materialInput.unit,
+            pricePerUnit: materialInput.pricePerUnit.toString(),
+            total: total.toString(),
+            sortOrder: i,
+          })
+        }
+      }
+
+      // Aktualizuj sumę
+      const [updated] = await ctx.db
+        .update(quotes)
+        .set({ total: totalSum.toString() })
+        .where(eq(quotes.id, id))
+        .returning()
+
+      return updated
+    }),
+
   generatePdf: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
@@ -225,14 +338,14 @@ export const quotesRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Quote not found' })
       }
 
-      // Fetch client
-      const [client] = await ctx.db
-        .select()
-        .from(clients)
-        .where(eq(clients.id, quoteData.clientId))
-
-      if (!client) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Client not found' })
+      // Fetch client (może być null)
+      let client: { firstName: string; lastName: string; siteAddress: string | null } | null = null
+      if (quoteData.clientId) {
+        const [clientData] = await ctx.db
+          .select()
+          .from(clients)
+          .where(eq(clients.id, quoteData.clientId))
+        client = clientData ?? null
       }
 
       // Check subscription for pro status
@@ -254,11 +367,11 @@ export const quotesRouter = router({
         disclaimer: quoteData.disclaimer,
         showDisclaimer: quoteData.showDisclaimer,
         createdAt: quoteData.createdAt,
-        client: {
+        client: client ? {
           firstName: client.firstName,
           lastName: client.lastName,
           siteAddress: client.siteAddress,
-        },
+        } : null,
         groups: quoteData.groups,
         materials: quoteData.materials,
       }, isPro)
