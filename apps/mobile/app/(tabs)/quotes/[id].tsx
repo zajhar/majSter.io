@@ -125,6 +125,14 @@ export default function QuoteDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.quoteNumber}>Wycena #{quote.number}</Text>
+        {(() => {
+          const client = quote.clientId ? clients?.find((c) => c.id === quote.clientId) : null
+          return (
+            <Text style={[styles.clientName, !client && styles.noClientText]}>
+              {client ? `${client.firstName} ${client.lastName}` : 'Bez klienta'}
+            </Text>
+          )
+        })()}
         <Text style={styles.total}>{quote.total} zl</Text>
         <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
           <Text style={[styles.statusText, { color: status.color }]}>
@@ -242,6 +250,16 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.medium,
     fontSize: 16,
     color: colors.text.body,
+  },
+  clientName: {
+    fontFamily: fontFamily.medium,
+    fontSize: 15,
+    color: colors.text.heading,
+    marginTop: 4,
+  },
+  noClientText: {
+    fontStyle: 'italic',
+    color: colors.text.muted,
   },
   total: {
     fontFamily: fontFamily.bold,
