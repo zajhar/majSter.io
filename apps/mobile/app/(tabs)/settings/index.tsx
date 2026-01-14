@@ -78,6 +78,14 @@ export default function SettingsScreen() {
           </Pressable>
         </Link>
 
+        <Link href="/(tabs)/settings/group-templates" asChild>
+          <Pressable style={styles.menuItem}>
+            <Ionicons name="layers-outline" size={22} color={colors.text.heading} />
+            <Text style={styles.menuItemText}>Szablony grup</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.text.muted} />
+          </Pressable>
+        </Link>
+
         <Link href="/(tabs)/settings/disclaimer" asChild>
           <Pressable style={styles.menuItem}>
             <Ionicons name="document-text-outline" size={22} color={colors.text.heading} />
