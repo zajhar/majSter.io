@@ -5,72 +5,91 @@
 
 import { Platform } from 'react-native'
 
-// Brand colors - OdFachowca palette
+// Brand colors - OdFachowca "Blue Collar Tech" palette
 export const colors = {
+  // Primary - Blueprint Blue
   primary: {
-    DEFAULT: '#3B5EDB',
-    50: '#EEF2FD',
-    100: '#D8E1FA',
-    200: '#B4C5F5',
-    300: '#8BA4EF',
-    400: '#6383E7',
-    500: '#3B5EDB',
-    600: '#2A4BC4',
-    700: '#1F389A',
-    800: '#162870',
-    900: '#0E1A4A',
+    DEFAULT: '#2563EB',
+    50: '#EFF6FF',
+    100: '#DBEAFE',
+    200: '#BFDBFE',
+    300: '#93C5FD',
+    400: '#60A5FA',
+    500: '#3B82F6',
+    600: '#2563EB',
+    700: '#1D4ED8',
+    800: '#1E40AF',
+    900: '#1E3A8A',
   },
-  accent: {
-    DEFAULT: '#DA7756',
-    50: '#FDF5F2',
-    100: '#FAE8E2',
-    200: '#F5D0C5',
-    300: '#EDB5A3',
-    400: '#E4967B',
-    500: '#DA7756',
-    600: '#C55E3D',
-    700: '#9D4A2F',
-    800: '#753722',
-    900: '#4D2516',
-  },
-  background: '#F8F6F3',
-  surface: '#FFFFFF',
-  text: {
-    heading: '#1A2B4A',
-    body: '#64748B',
-    muted: '#94A3B8',
-  },
-  border: '#E2E8F0',
-  success: {
-    DEFAULT: '#0EA5A0',
-    50: '#ECFDFB',
-    100: '#D1FAF7',
-    500: '#0EA5A0',
-    600: '#0B8480',
-    700: '#086361',
-  },
-  warning: {
-    DEFAULT: '#D69E2E',
+  // Tool Accent - Laser Amber (DeWalt-inspired)
+  tool: {
+    DEFAULT: '#F59E0B',
     50: '#FFFBEB',
     100: '#FEF3C7',
-    500: '#D69E2E',
-    600: '#B78426',
-    700: '#946A1E',
+    200: '#FDE68A',
+    300: '#FCD34D',
+    400: '#FBBF24',
+    500: '#F59E0B',
+    600: '#D97706',
+    700: '#B45309',
+    800: '#92400E',
+    900: '#78350F',
+  },
+  // Legacy accent alias (for gradual migration)
+  accent: {
+    DEFAULT: '#F59E0B',
+    50: '#FFFBEB',
+    100: '#FEF3C7',
+    200: '#FDE68A',
+    300: '#FCD34D',
+    400: '#FBBF24',
+    500: '#F59E0B',
+    600: '#D97706',
+    700: '#B45309',
+    800: '#92400E',
+    900: '#78350F',
+  },
+  // Canvas
+  background: '#F1F5F9',  // Concrete Mist (slate-100)
+  surface: '#FFFFFF',     // Paper White
+  // Text
+  text: {
+    heading: '#0F172A',   // Heavy Metal (slate-900)
+    body: '#475569',      // slate-600
+    muted: '#64748B',     // Steel Gray (slate-500)
+  },
+  border: '#CBD5E1',      // slate-300
+  // Functional
+  success: {
+    DEFAULT: '#059669',   // Profit Green (emerald-600)
+    50: '#ECFDF5',
+    100: '#D1FAE5',
+    500: '#10B981',
+    600: '#059669',
+    700: '#047857',
+  },
+  warning: {
+    DEFAULT: '#F59E0B',   // Same as tool (amber-500)
+    50: '#FFFBEB',
+    100: '#FEF3C7',
+    500: '#F59E0B',
+    600: '#D97706',
+    700: '#B45309',
   },
   error: {
-    DEFAULT: '#DC2626',
+    DEFAULT: '#DC2626',   // Stop Red (red-600)
     50: '#FEF2F2',
     100: '#FEE2E2',
-    500: '#DC2626',
-    600: '#B91C1C',
-    700: '#991B1B',
+    500: '#EF4444',
+    600: '#DC2626',
+    700: '#B91C1C',
   },
   white: '#FFFFFF',
   black: '#000000',
   transparent: 'transparent',
 } as const
 
-// Semantic colors for light/dark mode - OdFachowca
+// Semantic colors for light/dark mode - Blue Collar Tech
 export const Colors = {
   light: {
     text: colors.text.heading,
@@ -79,7 +98,7 @@ export const Colors = {
     background: colors.background,
     backgroundSecondary: colors.surface,
     tint: colors.primary.DEFAULT,
-    accent: colors.accent.DEFAULT,
+    accent: colors.tool.DEFAULT,
     icon: colors.text.body,
     tabIconDefault: colors.text.muted,
     tabIconSelected: colors.primary.DEFAULT,
@@ -87,18 +106,18 @@ export const Colors = {
     card: colors.surface,
   },
   dark: {
-    text: '#F8F6F3',
-    textSecondary: '#94A3B8',
+    text: '#F8FAFC',
+    textSecondary: '#CBD5E1',
     textMuted: '#64748B',
-    background: '#1A2B4A',
-    backgroundSecondary: '#243B5C',
-    tint: '#FFFFFF',
-    accent: colors.accent.DEFAULT,
+    background: '#0F172A',
+    backgroundSecondary: '#1E293B',
+    tint: '#3B82F6',
+    accent: colors.tool.DEFAULT,
     icon: '#94A3B8',
     tabIconDefault: '#64748B',
-    tabIconSelected: '#FFFFFF',
-    border: '#3B5066',
-    card: '#243B5C',
+    tabIconSelected: '#3B82F6',
+    border: '#334155',
+    card: '#1E293B',
   },
 }
 
