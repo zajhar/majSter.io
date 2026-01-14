@@ -10,7 +10,7 @@ import {
   getCachedQuoteById,
   deleteFromQuotesCache,
 } from '../db'
-import type { Quote, CreateQuoteInput } from '@majsterio/shared'
+import type { Quote, CreateQuoteInput, UpdateQuoteInput } from '@majsterio/shared'
 
 // Quote list item type (API returns loose types)
 export interface QuoteListItem {
@@ -237,6 +237,34 @@ function calculateTotal(input: CreateQuoteInput): number {
   }
 
   return total
+}
+
+// Hook for updating quote
+export function useUpdateQuote() {
+  const utils = trpc.useUtils()
+
+  const mutation = trpc.quotes.update.useMutation({
+    onSuccess: () => {
+      utils.quotes.list.invalidate()
+    },
+  })
+
+  const update = useCallback(
+    async (input: UpdateQuoteInput): Promise<{ success: boolean; error?: string }> => {
+      try {
+        await mutation.mutateAsync(input as any)
+        return { success: true }
+      } catch (err: any) {
+        return { success: false, error: err.message }
+      }
+    },
+    [mutation]
+  )
+
+  return {
+    update,
+    isLoading: mutation.isPending,
+  }
 }
 
 // Hook for deleting quote with offline support
