@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
 import { trpc } from '../../lib/trpc'
 import type { QuantitySource } from '@majsterio/shared'
+import { SERVICE_CATEGORIES, type ServiceCategoryKey } from '@majsterio/shared'
 import { colors, fontFamily, borderRadius, shadows } from '../../constants/theme'
 
 const QUANTITY_SOURCES: { value: QuantitySource; label: string }[] = [
@@ -54,6 +55,8 @@ export function StepServices() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const [selectedTemplates, setSelectedTemplates] = useState<SelectedTemplate[]>([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState<ServiceCategoryKey[]>([])
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false)
 
   // Single service form
   const [form, setForm] = useState<ServiceFormState>(initialFormState)
@@ -241,18 +244,56 @@ export function StepServices() {
     })
   }
 
-  // Filter templates by search
+  // Filter templates by search and categories
   const filteredTemplates = useMemo(() => {
     if (!templates) return []
-    if (!searchQuery.trim()) return templates
-    return templates.filter((t) =>
-      t.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  }, [templates, searchQuery])
 
-  // Group templates into categories
-  const systemTemplates = filteredTemplates.filter((t) => t.isSystem)
-  const userTemplates = filteredTemplates.filter((t) => !t.isSystem)
+    let result = templates
+
+    // Filter by categories
+    if (selectedCategories.length > 0) {
+      result = result.filter((t) =>
+        t.category && selectedCategories.includes(t.category as ServiceCategoryKey)
+      )
+    }
+
+    // Filter by search
+    if (searchQuery.trim()) {
+      result = result.filter((t) =>
+        t.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    return result
+  }, [templates, searchQuery, selectedCategories])
+
+  // Group templates by category
+  const groupedTemplates = useMemo(() => {
+    const groups: Record<string, typeof filteredTemplates> = {}
+
+    filteredTemplates.forEach((t) => {
+      const cat = t.category || 'inne'
+      if (!groups[cat]) groups[cat] = []
+      groups[cat].push(t)
+    })
+
+    return groups
+  }, [filteredTemplates])
+
+  // Toggle category filter
+  const handleToggleCategory = (category: ServiceCategoryKey) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(category)) {
+        return prev.filter((c) => c !== category)
+      }
+      return [...prev, category]
+    })
+  }
+
+  // Remove category filter
+  const handleRemoveCategory = (category: ServiceCategoryKey) => {
+    setSelectedCategories((prev) => prev.filter((c) => c !== category))
+  }
 
   return (
     <View style={styles.container}>
@@ -343,42 +384,42 @@ export function StepServices() {
             />
           </View>
 
-          <ScrollView style={styles.templatesScroll}>
-            {/* System templates */}
-            {systemTemplates.length > 0 && (
-              <View style={styles.templateSection}>
-                <Text style={styles.templateSectionTitle}>Popularne</Text>
-                <View style={styles.templateGrid}>
-                  {systemTemplates.map((t) => {
-                    const isSelected = selectedTemplates.some((s) => s.id === t.id)
-                    return (
-                      <Pressable
-                        key={t.id}
-                        style={[styles.templateChip, isSelected && styles.templateChipSelected]}
-                        onPress={() => handleToggleTemplate(t)}
-                      >
-                        {isSelected && (
-                          <Ionicons name="checkmark-circle" size={16} color={colors.primary.DEFAULT} />
-                        )}
-                        <Text style={[styles.templateChipText, isSelected && styles.templateChipTextSelected]}>
-                          {t.name}
-                        </Text>
-                        {t.defaultPrice && (
-                          <Text style={styles.templateChipPrice}>{t.defaultPrice} zl/{t.unit}</Text>
-                        )}
-                      </Pressable>
-                    )
-                  })}
-                </View>
+          {/* Category filters */}
+          <View style={styles.categoryFilters}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.categoryChips}>
+                {selectedCategories.map((cat) => (
+                  <Pressable
+                    key={cat}
+                    style={styles.categoryChip}
+                    onPress={() => handleRemoveCategory(cat)}
+                  >
+                    <Text style={styles.categoryChipText}>
+                      {SERVICE_CATEGORIES[cat]}
+                    </Text>
+                    <Ionicons name="close" size={14} color={colors.primary[700]} />
+                  </Pressable>
+                ))}
+                <Pressable
+                  style={styles.addCategoryButton}
+                  onPress={() => setShowCategoryPicker(true)}
+                >
+                  <Ionicons name="filter" size={16} color={colors.primary.DEFAULT} />
+                  <Text style={styles.addCategoryText}>Filtruj</Text>
+                </Pressable>
               </View>
-            )}
+            </ScrollView>
+          </View>
 
-            {/* User templates */}
-            {userTemplates.length > 0 && (
-              <View style={styles.templateSection}>
-                <Text style={styles.templateSectionTitle}>Moje szablony</Text>
+          <ScrollView style={styles.templatesScroll}>
+            {/* Grouped templates by category */}
+            {Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
+              <View key={category} style={styles.templateSection}>
+                <Text style={styles.templateSectionTitle}>
+                  {SERVICE_CATEGORIES[category as ServiceCategoryKey] || 'Inne'}
+                </Text>
                 <View style={styles.templateGrid}>
-                  {userTemplates.map((t) => {
+                  {categoryTemplates.map((t) => {
                     const isSelected = selectedTemplates.some((s) => s.id === t.id)
                     return (
                       <Pressable
@@ -400,7 +441,7 @@ export function StepServices() {
                   })}
                 </View>
               </View>
-            )}
+            ))}
 
             {/* Custom service button */}
             <Pressable style={styles.customServiceButton} onPress={handleAddCustom}>
@@ -420,6 +461,40 @@ export function StepServices() {
               </Pressable>
             </View>
           )}
+
+          {/* Category Picker Modal */}
+          <Modal
+            visible={showCategoryPicker}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowCategoryPicker(false)}
+          >
+            <Pressable
+              style={styles.categoryOverlay}
+              onPress={() => setShowCategoryPicker(false)}
+            >
+              <View style={styles.categoryModal}>
+                <Text style={styles.categoryModalTitle}>Wybierz kategorie</Text>
+                {Object.entries(SERVICE_CATEGORIES).map(([key, label]) => {
+                  const isSelected = selectedCategories.includes(key as ServiceCategoryKey)
+                  return (
+                    <Pressable
+                      key={key}
+                      style={styles.categoryOption}
+                      onPress={() => handleToggleCategory(key as ServiceCategoryKey)}
+                    >
+                      <Ionicons
+                        name={isSelected ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={isSelected ? colors.primary.DEFAULT : colors.text.body}
+                      />
+                      <Text style={styles.categoryOptionText}>{label}</Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            </Pressable>
+          </Modal>
         </View>
       </Modal>
 
@@ -1045,5 +1120,74 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fontFamily.bold,
     color: colors.success[700],
+  },
+  categoryFilters: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  categoryChips: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary[50],
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: borderRadius.md,
+    gap: 6,
+  },
+  categoryChipText: {
+    fontSize: 13,
+    fontFamily: fontFamily.medium,
+    color: colors.primary[700],
+  },
+  addCategoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 6,
+  },
+  addCategoryText: {
+    fontSize: 13,
+    fontFamily: fontFamily.medium,
+    color: colors.primary.DEFAULT,
+  },
+  categoryOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryModal: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: 20,
+    width: '85%',
+    maxWidth: 360,
+  },
+  categoryModalTitle: {
+    fontSize: 17,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 12,
+  },
+  categoryOptionText: {
+    fontSize: 15,
+    fontFamily: fontFamily.regular,
+    color: colors.text.heading,
   },
 })
