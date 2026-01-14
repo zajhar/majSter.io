@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   View, Text, Pressable, StyleSheet,
-  TextInput, Modal, ScrollView, FlatList
+  TextInput, Modal, ScrollView, FlatList, Alert
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useQuoteStore } from '../../stores/quoteStore'
@@ -49,6 +49,20 @@ export function StepServices() {
   const { draft, addServiceToGroup, removeService, calculateGroupM2 } = useQuoteStore()
   const { data: templates } = trpc.templates.services.list.useQuery()
 
+  // Create group template mutation
+  const createTemplateMutation = trpc.groupTemplates.create.useMutation({
+    onSuccess: () => {
+      setShowSaveTemplateModal(false)
+      setTemplateName('')
+      setTemplateDescription('')
+      setSavingGroupId(null)
+      Alert.alert('Sukces', 'Szablon zostal zapisany')
+    },
+    onError: () => {
+      Alert.alert('Blad', 'Nie udalo sie zapisac szablonu')
+    },
+  })
+
   // Modal states
   const [showSelectModal, setShowSelectModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -62,6 +76,12 @@ export function StepServices() {
   const [form, setForm] = useState<ServiceFormState>(initialFormState)
   const [errors, setErrors] = useState<{ name?: string; price?: string }>({})
   const [showCustomUnit, setShowCustomUnit] = useState(false)
+
+  // Save as template modal state
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false)
+  const [templateName, setTemplateName] = useState('')
+  const [templateDescription, setTemplateDescription] = useState('')
+  const [savingGroupId, setSavingGroupId] = useState<string | null>(null)
 
   // Batch edit state
   const [batchServices, setBatchServices] = useState<Array<{
@@ -295,6 +315,38 @@ export function StepServices() {
     setSelectedCategories((prev) => prev.filter((c) => c !== category))
   }
 
+  // Save group as template handlers
+  const handleSaveAsTemplate = (groupId: string) => {
+    const group = draft.groups.find(g => g.id === groupId)
+    if (group) {
+      setSavingGroupId(groupId)
+      setTemplateName(group.name)
+      setTemplateDescription('')
+      setShowSaveTemplateModal(true)
+    }
+  }
+
+  const handleConfirmSaveTemplate = () => {
+    if (!savingGroupId || !templateName.trim()) return
+
+    const group = draft.groups.find(g => g.id === savingGroupId)
+    if (!group || group.services.length === 0) {
+      Alert.alert('Blad', 'Grupa musi miec co najmniej jedna usluge')
+      return
+    }
+
+    createTemplateMutation.mutate({
+      name: templateName.trim(),
+      description: templateDescription.trim() || undefined,
+      services: group.services.map(s => ({
+        name: s.name,
+        unit: s.unit,
+        pricePerUnit: s.pricePerUnit,
+        quantitySource: s.quantitySource,
+      })),
+    })
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -310,7 +362,7 @@ export function StepServices() {
           return (
             <View key={group.id} style={styles.groupSection}>
               <View style={styles.groupHeader}>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.groupName}>{group.name}</Text>
                   {(m2.floor > 0 || m2.walls > 0 || m2.perimeter > 0) && (
                     <Text style={styles.groupDimensions}>
@@ -322,6 +374,15 @@ export function StepServices() {
                 </View>
                 {groupTotal > 0 && (
                   <Text style={styles.groupTotal}>{groupTotal.toFixed(0)} zl</Text>
+                )}
+                {group.services.length > 0 && (
+                  <Pressable
+                    style={styles.groupMenuButton}
+                    onPress={() => handleSaveAsTemplate(group.id)}
+                    hitSlop={8}
+                  >
+                    <Ionicons name="bookmark-outline" size={22} color={colors.text.body} />
+                  </Pressable>
                 )}
               </View>
 
@@ -709,6 +770,65 @@ export function StepServices() {
             </View>
           )}
         </ScrollView>
+      </Modal>
+
+      {/* Save as Template Modal */}
+      <Modal visible={showSaveTemplateModal} animationType="fade" transparent>
+        <Pressable
+          style={styles.saveTemplateOverlay}
+          onPress={() => setShowSaveTemplateModal(false)}
+        >
+          <View style={styles.saveTemplateModal}>
+            <Text style={styles.saveTemplateTitle}>Zapisz jako szablon</Text>
+
+            <Text style={styles.label}>Nazwa szablonu</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="np. Lazienka standard"
+              placeholderTextColor={colors.text.muted}
+              value={templateName}
+              onChangeText={setTemplateName}
+            />
+
+            <Text style={styles.label}>Opis (opcjonalnie)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Krotki opis szablonu..."
+              placeholderTextColor={colors.text.muted}
+              value={templateDescription}
+              onChangeText={setTemplateDescription}
+              multiline
+              numberOfLines={2}
+            />
+
+            {savingGroupId && (
+              <Text style={styles.saveTemplateInfo}>
+                Uslugi do zapisania: {draft.groups.find(g => g.id === savingGroupId)?.services.length ?? 0}
+              </Text>
+            )}
+
+            <View style={styles.saveTemplateButtons}>
+              <Pressable
+                style={styles.saveTemplateCancelButton}
+                onPress={() => setShowSaveTemplateModal(false)}
+              >
+                <Text style={styles.saveTemplateCancelText}>Anuluj</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.saveTemplateConfirmButton,
+                  (!templateName.trim() || createTemplateMutation.isPending) && styles.saveTemplateButtonDisabled
+                ]}
+                onPress={handleConfirmSaveTemplate}
+                disabled={!templateName.trim() || createTemplateMutation.isPending}
+              >
+                <Text style={styles.saveTemplateConfirmText}>
+                  {createTemplateMutation.isPending ? 'Zapisuje...' : 'Zapisz'}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
       </Modal>
     </View>
   )
@@ -1189,5 +1309,72 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fontFamily.regular,
     color: colors.text.heading,
+  },
+  groupMenuButton: {
+    marginLeft: 12,
+    padding: 4,
+  },
+  saveTemplateOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  saveTemplateModal: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.xl,
+    padding: 20,
+    width: '85%',
+    maxWidth: 360,
+  },
+  saveTemplateTitle: {
+    fontSize: 18,
+    fontFamily: fontFamily.semibold,
+    color: colors.text.heading,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  textArea: {
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  saveTemplateInfo: {
+    fontSize: 13,
+    fontFamily: fontFamily.regular,
+    color: colors.text.muted,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  saveTemplateButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  saveTemplateCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+  },
+  saveTemplateCancelText: {
+    fontSize: 15,
+    fontFamily: fontFamily.medium,
+    color: colors.text.body,
+  },
+  saveTemplateConfirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary.DEFAULT,
+    alignItems: 'center',
+  },
+  saveTemplateConfirmText: {
+    fontSize: 15,
+    fontFamily: fontFamily.semibold,
+    color: colors.white,
+  },
+  saveTemplateButtonDisabled: {
+    opacity: 0.5,
   },
 })
