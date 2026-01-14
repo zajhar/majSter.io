@@ -41,6 +41,7 @@ async function seed() {
       userId: SYSTEM_USER_ID,
       name: template.name,
       description: template.description,
+      category: template.category,
       isSystem: true,
       sortOrder: i,
     }).returning()
